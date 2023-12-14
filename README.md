@@ -63,6 +63,7 @@ Welcome to DetectiveInferno, an immersive detective game generator and interacti
 ```
 ## Flowchart
 ![flowchart](image.png)
+https://drive.google.com/file/d/1x2BkuAH25fAIRq2JZRomlrh6o6gLEVB8/view?usp=sharing
 
 ## API Documentation
 ### `GET /api/stories`
