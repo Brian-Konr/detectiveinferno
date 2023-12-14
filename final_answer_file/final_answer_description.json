@@ -1,0 +1,15 @@
+{
+    "name": "final_answer_description",
+    "description": "the truth of the murder story",
+    "parameters":{
+        "type":"object",
+        "properties":{
+            "真相":{
+                "type":"string",
+                "description":"the truth of the whole story"
+            }
+        },
+        "required":["真相"]
+    }
+
+}
