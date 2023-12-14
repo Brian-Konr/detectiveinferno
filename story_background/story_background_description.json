@@ -1,0 +1,141 @@
+{
+    "name": "story_background",
+    "description":"information of the story",
+    "parameters":{
+        "type":"object",
+        "properties":{
+            "故事大綱":{
+                "type":"string",
+                "description":"story summary"
+            },
+            "時間": {
+                "type":"string",
+                "description":"time"
+            },
+            "地點": {
+                "type":"string",
+                "description":"place"
+            },
+            "死者": {
+                "type":"string",
+                "description":"deceased"
+            },
+            "死因": {
+                "type":"string",
+                "description":"cause of death"
+            },
+            "嫌疑人": {
+                "type":"array",
+                "description": "informations of suspects",
+                "items":{
+                    "type":"object",
+                    "properties":{
+                        "ID":{
+                            "type":"number",
+                            "description":"suspect id as array index"
+                        },
+                        "姓名":{
+                            "type":"string",
+                            "description":"name"
+                        },
+                        "關係":{
+                            "type":"string",
+                            "description":"relationship with deceased"
+                        },
+                        "動機":{
+                            "type":"string",
+                            "description":"motivation"
+                        },
+                        "證據":{
+                            "type":"string",
+                            "description":"evidence"
+                        },
+                        "不在場證明":{
+                            "type":"string",
+                            "description":"alibi"
+                        }
+                    },
+                    "required":["ID","姓名","關係","動機","證據","不在場證明"]
+                }
+            },
+            "場景":{
+                "type":"object",
+                "properties":{
+                    "概述":{
+                        "type":"string",
+                        "description":"scene overview"
+                    },
+                    "物件":{
+                        "type":"array",
+                        "description":"object",
+                        "items":{
+                            "type":"object",
+                            "properties":{
+                                "物件名稱":{
+                                    "type":"string",
+                                    "description":"object name"
+                                },
+                                "細節":{
+                                    "type":"string",
+                                    "description":"object detail"
+                                }
+                            },
+                            "required":["物件名稱","細節"]
+                        }
+                    }
+                },
+                "required":["概述","物件"]
+                
+            },
+            "線索":{
+                "type":"array",
+                "description": "clue",
+                "items":{
+                    "type":"object",
+                    "properties":{
+                        "ID":{
+                            "type":"number",
+                            "description":"clue id as array index"
+                        },
+                        "概述":{
+                            "type":"string",
+                            "description":"clue overview"
+                        },
+                        "相關人物":{
+                            "type":"string",
+                            "description":"Relevant character"
+                        },
+                        "細節":{
+                            "type":"string",
+                            "description":"clue detail"
+                        }
+                    },
+                    "required":["ID","概述","相關人物","細節"]
+                }
+            },
+            "結果":{
+                "type":"object",
+                "properties":{
+                    "犯人":{
+                        "type":"string",
+                        "description":"the murderer"
+                    },
+                    "動機":{
+                        "type":"string",
+                        "description":"motivation"
+                    },
+                    "作案過程":{
+                        "type":"string",
+                        "description":"The process of committing the crime"
+                    },
+                    "證據":{
+                        "type":"string",
+                        "description":"evidence"
+                    }
+                },
+                "required":["犯人","動機","作案過程","證據"]
+            }
+        },
+        "required":["故事大綱","時間","地點","死者","死因","嫌疑人","場景","線索","結果"]
+    }
+}

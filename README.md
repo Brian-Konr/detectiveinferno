@@ -3,6 +3,10 @@
 1. 透過 prompt 1 生成故事和人物背景 [已完成]
 2. 透過 prompt 3 生成專門描述場景的AI [已完成]
 3. 各個 嫌疑人專門AI [尚未處理]
+### Issue
+12.13 => Azure 無法使用，只能給企業做使用
+12.14 => max token 壓不下來，因為產生story background dictionary 就要1000 token左右
+12.14 => GET api/scenes 是否是要犯罪現場
 
 # detectiveinferno
 Welcome to DetectiveInferno, an immersive detective game generator and interactive storytelling platform! Dive into the world of mystery and intrigue as you investigate a crime, interrogate suspects, and unravel the secrets hidden within the narrative.
