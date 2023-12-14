@@ -1,26 +1,11 @@
 import openai
 import json
 
-#### load start prompt
-f = open('start_prompt.txt',encoding="utf-8")
-start_prompt = f.read()
-
-
-
-# with open('prompt.json',encoding="utf-8") as prompt_file:
-#     prompt = json.load(prompt_file)
-# f = open('special_prompt.txt',encoding="utf-8")
-# text = f.read()
-# print(text)
-# print("start game")
-# start_game_prompt = prompt["start_prompt"]["system_setting"] + prompt["start_prompt"]["basic_setting"] + prompt["start_prompt"]["game_setting"]
-# print(start_game_prompt)
-
-####
+#### openai processor
 def GPT_processor(message, function_description):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        max_tokens=200,
+        max_tokens=2000,
         temperature=0.5,
         messages=[{"role": "user", "content": message}],
         functions=function_description,
@@ -28,23 +13,117 @@ def GPT_processor(message, function_description):
     )
     return response
 
-
-
 ###### game creator
-with open('info.json',encoding="utf-8") as file:
-    story_background_description = [json.load(file)]
-story_response = GPT_processor(start_prompt, story_background_description)
-# story_response = openai.ChatCompletion.create(
-#   model="gpt-3.5-turbo",
-#   max_tokens=3000,
-#   temperature=0.5,
-#   messages=[
-#         {"role": "user", "content": text},
-#         # {"role": "assistant", "content": "原來你是楊鈞安呀"},
-#         # {"role": "user", "content": "請問我叫什麼名字？"}
-#     ]
-# )
-print(story_response.choices[0].message.content)
+def story_creater():
+    #### load start prompt
+    f = open('./story_background/start_prompt.txt',encoding="utf-8")
+    start_prompt = f.read()
+    with open('./story_background/story_background_description.json',encoding="utf-8") as file:
+        story_background_description = [json.load(file)]
+    story_response = GPT_processor(start_prompt, story_background_description)
+    # store the story dictionary result to story.json
+    story_object  = json.dumps(story_response.choices[0].message.function_call.arguments)
+    print(story_object.encode('ascii').decode('unicode-escape'))
+    with open("./story_background/story.json", "w") as outfile:
+        outfile.write(story_object)
+    return story_response.choices[0].message.function_call.arguments
+
+
+###### suspect creater
+def suspect_creater(target,action):
+    #### load start prompt
+    f = open('./suspect_file/suspect_prompt.txt',encoding="utf-8")
+    suspect_prompt = f.read()
+    suspect_prompt = suspect_prompt + " 你現在是嫌疑人:" + target +"，回答以下問題：" + action
+    with open('./suspect_file/suspect_description.json',encoding="utf-8") as file:
+        suspect_description = [json.load(file)]
+        
+        
+    suspect_response = GPT_processor(suspect_prompt, suspect_description)
+    # store the story dictionary result to story.json
+    suspect_object  = json.dumps(suspect_response.choices[0].message.function_call.arguments)
+    print(suspect_object.encode('ascii').decode('unicode-escape'))
+    return suspect_response.choices[0].message.function_call.arguments
+    # store the reply
+    # with open("./story_background/suspect.json", "w") as outfile:
+    #     outfile.write(story_object)
+    
+    
+###### scene_creater
+def scene_creater(action):
+    #### load start prompt
+    f = open('./scene_file/scene_prompt.txt',encoding="utf-8")
+    scene_prompt = f.read()
+    scene_prompt = scene_prompt + "，回答以下問題:" + action
+    with open('./scene_file/scene_description.json',encoding="utf-8") as file:
+        scene_description = [json.load(file)]
+        
+        
+    scene_response = GPT_processor(scene_prompt, scene_description)
+    # store the story dictionary result to story.json
+    scene_object  = json.dumps(scene_response.choices[0].message.function_call.arguments)
+    print(scene_object.encode('ascii').decode('unicode-escape'))
+    return scene_response.choices[0].message.function_call.arguments
+
+
+###### final_answer_creater
+def final_answer_creater(id, motivation, action):
+    #### load start prompt
+    f = open('./final_answer_file/final_answer_prompt.txt',encoding="utf-8")
+    fa_prompt = f.read()
+    with open('./final_answer_file/final_answer_description.json',encoding="utf-8") as file:
+        final_answer_description = [json.load(file)]
+        
+        
+    final_answer_response = GPT_processor(final_answer_prompt, final_answer_description)
+    # store the story dictionary result to story.json
+    final_answer_object  = json.dumps(final_answer_response.choices[0].message.function_call.arguments)
+    print(final_answer_object.encode('ascii').decode('unicode-escape'))
+    return final_answer_response.choices[0].message.function_call.arguments
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+#   .function_call.arguments).get("place")
+# print(story_response.choices[0].message.content)
 # story_background = story_response.choices[0].message.content
 ##### create information dictionary
 # dictionary_response = openai.ChatCompletion.create(
