@@ -9,7 +9,7 @@ def GPT_processor(message, function_description):
         temperature=0.5,
         messages=[{"role": "user", "content": message}],
         functions=function_description,
-        function_call = "auto"
+        function_call = {"name":function_description[0]['name']}
     )
     return response
 
@@ -20,6 +20,7 @@ def story_creater():
     start_prompt = f.read()
     with open('./story_background/story_background_description.json',encoding="utf-8") as file:
         story_background_description = [json.load(file)]
+    print("start process AI api")
     story_response = GPT_processor(start_prompt, story_background_description)
     # store the story dictionary result to story.json
     story_object  = json.dumps(story_response.choices[0].message.function_call.arguments)
@@ -34,16 +35,16 @@ def suspect_creater(target,action):
     #### load start prompt
     f = open('./suspect_file/suspect_prompt.txt',encoding="utf-8")
     suspect_prompt = f.read()
-    suspect_prompt = suspect_prompt + " 你現在是嫌疑人:" + target +"，回答以下問題：" + action
+    suspect_prompt = suspect_prompt + " 你現在是嫌疑人:" + target +"，請回答以下問題：" + action
     with open('./suspect_file/suspect_description.json',encoding="utf-8") as file:
         suspect_description = [json.load(file)]
-        
-        
     suspect_response = GPT_processor(suspect_prompt, suspect_description)
-    # store the story dictionary result to story.json
+    
+    
     suspect_object  = json.dumps(suspect_response.choices[0].message.function_call.arguments)
     print(suspect_object.encode('ascii').decode('unicode-escape'))
-    return suspect_response.choices[0].message.function_call.arguments
+    # return suspect_response.choices[0].message.content
+    return json.loads(suspect_response.choices[0].message.function_call.arguments).get("回覆")
     # store the reply
     # with open("./story_background/suspect.json", "w") as outfile:
     #     outfile.write(story_object)
@@ -57,14 +58,13 @@ def scene_creater(action):
     scene_prompt = scene_prompt + "，回答以下問題:" + action
     with open('./scene_file/scene_description.json',encoding="utf-8") as file:
         scene_description = [json.load(file)]
-        
-        
     scene_response = GPT_processor(scene_prompt, scene_description)
-    # store the story dictionary result to story.json
     scene_object  = json.dumps(scene_response.choices[0].message.function_call.arguments)
     print(scene_object.encode('ascii').decode('unicode-escape'))
-    return scene_response.choices[0].message.function_call.arguments
-
+    return json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆")
+    # print(scene_response)
+    # print(scene_response.choices[0].message.content)
+    # return scene_response.choices[0].message.content
 
 ###### final_answer_creater
 def final_answer_creater(id, motivation, action):
@@ -73,13 +73,11 @@ def final_answer_creater(id, motivation, action):
     fa_prompt = f.read()
     with open('./final_answer_file/final_answer_description.json',encoding="utf-8") as file:
         final_answer_description = [json.load(file)]
-        
-        
-    final_answer_response = GPT_processor(final_answer_prompt, final_answer_description)
+    final_answer_response = GPT_processor(fa_prompt, final_answer_description)
     # store the story dictionary result to story.json
     final_answer_object  = json.dumps(final_answer_response.choices[0].message.function_call.arguments)
     print(final_answer_object.encode('ascii').decode('unicode-escape'))
-    return final_answer_response.choices[0].message.function_call.arguments
+    return json.loads(final_answer_response.choices[0].message.function_call.arguments).get("真相")
     
 
     

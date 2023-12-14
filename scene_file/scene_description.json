@@ -1,0 +1,15 @@
+{
+    "name": "scene_description",
+    "description": "information of the scene",
+    "parameters":{
+        "type":"object",
+        "properties":{
+            "回覆":{
+                "type":"string",
+                "description":"description"
+            }
+        },
+        "required":["回覆"]
+    }
+
+}

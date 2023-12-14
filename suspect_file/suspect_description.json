@@ -1,0 +1,15 @@
+{
+    "name": "suspect_reply",
+    "description": "information of the suspect",
+    "parameters":{
+        "type":"object",
+        "properties":{
+            "回覆":{
+                "type":"string",
+                "description":"reply"
+            }
+        },
+        "required":["回覆"]
+    }
+
+}
