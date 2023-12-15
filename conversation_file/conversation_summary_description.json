@@ -1,0 +1,15 @@
+{
+    "name": "conversation_summary_description",
+    "description": "the summary of the text",
+    "parameters":{
+        "type":"object",
+        "properties":{
+            "概括":{
+                "type":"string",
+                "description":"the summary of the text"
+            }
+        },
+        "required":["概括"]
+    }
+
+}
