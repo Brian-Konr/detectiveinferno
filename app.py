@@ -1,6 +1,7 @@
 from flask import Flask,jsonify,request
 import json
-from AI_processor import story_creater,suspect_creater,scene_creater,final_answer_creater
+from AI_processor import story_creater, suspect_creater, scene_creater, final_answer_creater
+
 app = Flask(__name__)
 story_json = {}
 
