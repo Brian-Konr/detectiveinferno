@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, Button, Text, VStack, Heading } from '@chakra-ui/react';
 import { FiSearch, FiHelpCircle, FiEye } from 'react-icons/fi';
 

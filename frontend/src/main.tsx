@@ -1,3 +1,4 @@
+import React from 'react';
 import { render } from 'react-dom';
 import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
