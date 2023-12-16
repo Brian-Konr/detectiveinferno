@@ -1,71 +1,191 @@
-import { Box, Button, Text, VStack, Heading, HStack } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Text,
+  VStack,
+  Heading,
+  HStack,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Input,
+  Select,
+  Spinner,
+  Center,
+} from '@chakra-ui/react';
+
 import { FiSearch, FiHelpCircle } from 'react-icons/fi';
 import { AiFillQuestionCircle } from 'react-icons/ai';
 import { useNavigate } from 'react-router';
+import { useContext, useEffect, useState } from 'react';
+import { StoryContext, StoryContextType } from '../contexts/storyContext';
+import { AvatarContext, IAvatarContextType } from '../contexts/avatarContext';
+import { GuessContext, GuessContextType } from '../contexts/guessContext';
+import { MdSend } from 'react-icons/md';
 
 const MenuPage = () => {
   const navigate = useNavigate();
+  const [isFetchingHint, setIsFetchingHint] = useState(false);
+  const { isOpen: isHintOpen, onOpen: onHintOpen, onClose: onHintClose } = useDisclosure();
+
+  const { isOpen: isGuessOpen, onOpen: onGuessOpen, onClose: onGuessClose } = useDisclosure();
+
+  const { story, loading } = useContext(StoryContext) as StoryContextType;
+
+  const { avatars, loading: avatarLoading } = useContext(AvatarContext) as IAvatarContextType;
+
+  const { suspectId, motivation, method, setMethod, setMotivation, setSuspectId, isValid } = useContext(
+    GuessContext,
+  ) as GuessContextType;
+
+  useEffect(() => {
+    if (isFetchingHint) {
+      setTimeout(() => {
+        setIsFetchingHint(false);
+        onHintOpen();
+      }, 1000);
+    }
+  }, [isFetchingHint, onHintOpen]);
+
+  const MenuButton = ({
+    leftIcon,
+    colorScheme,
+    onClick,
+    children,
+  }: {
+    leftIcon: React.ReactElement;
+    colorScheme: string;
+    onClick: () => void;
+    children: React.ReactNode;
+  }) => (
+    <Button leftIcon={leftIcon} colorScheme={colorScheme} size="lg" flex="1" minW="0" onClick={onClick}>
+      {children}
+    </Button>
+  );
 
   return (
-    <Box bgGradient="linear(to-r, blue.900, gray.800)" h="100vh" w="100vw">
-      <VStack spacing={8} align="center" justify="center" h="full">
-        {/* Info Box */}
-        <Box
-          bg="whiteAlpha.200"
-          borderRadius="lg"
-          p={8}
-          color="white"
-          boxShadow="dark-lg"
-          maxWidth="xl"
-          w="full"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Heading as="h1" size="2xl" mb={4}>
-            Detective Game
-          </Heading>
-          <Text>Story Background: [Insert story background here]</Text>
-          <Text mt={4}>The Death: [Insert information about the death]</Text>
-          <Text mt={4}>
-            Method of Murder: [Insert how the death was killed]
-          </Text>
-          <Text mt={4}>
-            Suspects Introduction: [Insert brief intro to suspects]
-          </Text>
-        </Box>
+    <Box bgImage="url('./menu_bg.png')" h="100vh" w="100vw">
+      {loading ? (
+        <Center height="100vh">
+          <Spinner />
+        </Center>
+      ) : (
+        <VStack spacing={8} align="center" justify="center" h="full">
+          {/* Info Box */}
+          <Box
+            backgroundColor="rgba(119, 119, 119, 0.8)"
+            borderRadius="lg"
+            p={8}
+            color="white"
+            boxShadow="dark-lg"
+            maxWidth="xl"
+            w="full"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Heading as="h1" size="2xl" mb={4}>
+              {story.title}
+            </Heading>
+            <Text>{story.background}</Text>
+          </Box>
+          {/* Button Box */}
+          <Box w="full" maxW="xl" mx="auto">
+            <HStack spacing={4} w="full">
+              <MenuButton leftIcon={<FiSearch />} colorScheme="purple" onClick={() => navigate('/suspects')}>
+                調查嫌疑人＆場景
+              </MenuButton>
+              <MenuButton
+                leftIcon={isFetchingHint ? <Spinner /> : <FiHelpCircle />}
+                colorScheme="green"
+                onClick={() => setIsFetchingHint(true)}
+              >
+                給我提示
+              </MenuButton>
+              <MenuButton leftIcon={<AiFillQuestionCircle />} colorScheme="orange" onClick={() => onGuessOpen()}>
+                我要猜謎
+              </MenuButton>
+            </HStack>
+          </Box>
+          {/* Popover */}
+          <Popover isOpen={isHintOpen} onClose={onHintClose}>
+            <PopoverTrigger>
+              <Box />
+            </PopoverTrigger>
+            <PopoverContent maxW="100%">
+              <PopoverArrow />
+              <PopoverCloseButton />
+              <PopoverHeader>Hint</PopoverHeader>
+              <PopoverBody>Your hint goes here</PopoverBody>
+            </PopoverContent>
+          </Popover>
+          {/* Guess Modal */}
+          <Modal isOpen={isGuessOpen} onClose={onGuessClose}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>請填入你的猜測</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                {avatarLoading ? (
+                  <Center>
+                    <Spinner />
+                  </Center>
+                ) : (
+                  <>
+                    <Select
+                      placeholder="選擇兇手"
+                      mb={3}
+                      value={suspectId}
+                      onChange={(e) => setSuspectId(Number(e.target.value))}
+                    >
+                      {avatars.map(
+                        (avatar) =>
+                          avatar.isSuspect && (
+                            <option key={avatar.id} value={avatar.id}>
+                              {avatar.name}
+                            </option>
+                          ),
+                      )}
+                    </Select>
+                    <Input
+                      placeholder="動機"
+                      mb={3}
+                      value={motivation}
+                      onChange={(e) => setMotivation(e.target.value)}
+                    />
+                    <Input placeholder="作案手法" mb={3} value={method} onChange={(e) => setMethod(e.target.value)} />
+                  </>
+                )}
+              </ModalBody>
 
-        <Box w="full" maxW="lg" mx="auto">
-          <HStack spacing={4} w="full">
-            <Button
-              leftIcon={<FiSearch />}
-              colorScheme="purple"
-              size="lg"
-              flex="1"
-              onClick={() => navigate('/suspects')}
-            >
-              調查嫌疑人場景
-            </Button>
-            <Button
-              leftIcon={<FiHelpCircle />}
-              colorScheme="green"
-              size="lg"
-              flex="1"
-            >
-              給我提示
-            </Button>
-            <Button
-              leftIcon={<AiFillQuestionCircle />}
-              colorScheme="orange"
-              size="lg"
-              flex="1"
-            >
-              我要猜謎
-            </Button>
-          </HStack>
-        </Box>
-      </VStack>
+              <ModalFooter>
+                <Button
+                  rightIcon={<MdSend />}
+                  colorScheme="blue"
+                  mr={3}
+                  onClick={() => navigate('/ending')}
+                  isDisabled={!isValid}
+                >
+                  送出
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </VStack>
+      )}
     </Box>
   );
 };
