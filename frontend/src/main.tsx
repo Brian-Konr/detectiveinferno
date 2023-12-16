@@ -14,5 +14,5 @@ render(
       </Routes>
     </Router>
   </ChakraProvider>,
-  document.getElementById('root')
+  document.getElementById('root'),
 );
