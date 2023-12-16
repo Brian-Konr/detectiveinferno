@@ -1,12 +1,12 @@
 export enum Sender {
-  Suspect,
+  Npc,
   Player,
 }
 
-interface IChatMessage {
+export interface IChatMessage {
   id: number;
   sender: Sender;
-  message: string;
+  content: string;
 }
 
 export interface IAvatar {
@@ -16,7 +16,8 @@ export interface IAvatar {
   chatHistory: IChatMessage[];
 }
 
-export interface IAvatarState {
+export interface IAvatarContextType {
   avatars: IAvatar[];
-  currentAvatar: IAvatar;
+  updateAvatar: (avatar: IAvatar) => void;
+  updateChatHistory: (message: IChatMessage, avatarId: number) => void;
 }

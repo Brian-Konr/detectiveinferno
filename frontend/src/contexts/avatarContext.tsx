@@ -1,66 +1,42 @@
 // AvatarContext.tsx
 import React, { createContext, useState } from 'react';
-import { IAvatarState, IAvatar, Sender, IChatMessage } from '../@types/avatar';
+import {
+  IAvatar,
+  Sender,
+  IChatMessage,
+  IAvatarContextType,
+} from '../types/Avatar';
 
-interface IAvatarContext {
-  avatarState: IAvatarState;
-  updateChatHistory: (message: IChatMessage, avatarId: number) => void;
-  setCurrentAvatar: (avatarId: number) => void;
-  updateAvatar: (avatar: IAvatar) => void;
-}
-
-const AvatarContext = createContext<IAvatarContext | undefined>(undefined);
+const AvatarContext = createContext<IAvatarContextType | undefined>(undefined);
 
 const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const fakeAvatars = getFakeAvatars();
+  const [avatars, setAvatars] = useState<IAvatar[]>(getFakeAvatars());
   const updateChatHistory = (message: IChatMessage, avatarId: number) => {
-    const newAvatars = avatarState.avatars.map((avatar) => {
+    const newAvatars = avatars.map((avatar) => {
       if (avatar.id === avatarId) {
         avatar.chatHistory.push(message);
       }
       return avatar;
     });
-    setAvatarState({
-      ...avatarState,
-      avatars: newAvatars,
-    });
-  };
-  const setCurrentAvatar = (avatarId: number) => {
-    const newCurrentAvatar = avatarState.avatars.find(
-      (avatar) => avatar.id === avatarId,
-    );
-    if (newCurrentAvatar) {
-      setAvatarState({
-        ...avatarState,
-        currentAvatar: newCurrentAvatar,
-      });
-    }
+    setAvatars(newAvatars);
   };
   const updateAvatar = (avatar: IAvatar) => {
-    const newAvatars = avatarState.avatars.map((oldAvatar) => {
+    const newAvatars = avatars.map((oldAvatar) => {
       if (oldAvatar.id === avatar.id) {
         return avatar;
       }
       return oldAvatar;
     });
-    setAvatarState({
-      ...avatarState,
-      avatars: newAvatars,
-    });
+    setAvatars(newAvatars);
   };
-  const [avatarState, setAvatarState] = useState<IAvatarState>({
-    avatars: fakeAvatars,
-    currentAvatar: fakeAvatars[0],
-  });
   return (
     <AvatarContext.Provider
       value={{
-        avatarState,
+        avatars,
         updateAvatar,
         updateChatHistory,
-        setCurrentAvatar,
       }}
     >
       {children}
@@ -77,13 +53,13 @@ const getFakeAvatars = () => {
       chatHistory: [
         {
           id: 0,
-          sender: Sender.Suspect,
-          message: 'Hello how can I help you?',
+          sender: Sender.Npc,
+          content: 'Hello how can I help you?',
         },
         {
           id: 1,
           sender: Sender.Player,
-          message: 'I need your help',
+          content: 'I need your help',
         },
       ],
     },
@@ -94,13 +70,13 @@ const getFakeAvatars = () => {
       chatHistory: [
         {
           id: 0,
-          sender: Sender.Suspect,
-          message: 'Hello how can I help you?',
+          sender: Sender.Npc,
+          content: 'Hello how can I help you?',
         },
         {
           id: 1,
           sender: Sender.Player,
-          message: 'I need your help',
+          content: 'I need your help',
         },
       ],
     },
@@ -111,64 +87,30 @@ const getFakeAvatars = () => {
       chatHistory: [
         {
           id: 0,
-          sender: Sender.Suspect,
-          message: 'Hello how can I help you?',
+          sender: Sender.Npc,
+          content: 'Hello how can I help you?',
         },
         {
           id: 1,
           sender: Sender.Player,
-          message: 'I need your help',
+          content: 'I need your help',
         },
       ],
     },
     {
       id: 4,
-      name: 'Avatar 4',
-      relationship: 'Friend',
+      name: 'Crime Theme',
+      relationship: 'Find what you need!',
       chatHistory: [
         {
           id: 0,
-          sender: Sender.Suspect,
-          message: 'Hello how can I help you?',
+          sender: Sender.Npc,
+          content: 'Hello I am the crime theme bot',
         },
         {
           id: 1,
           sender: Sender.Player,
-          message: 'I need your help',
-        },
-      ],
-    },
-    {
-      id: 5,
-      name: 'Avatar 5',
-      relationship: 'Friend',
-      chatHistory: [
-        {
-          id: 0,
-          sender: Sender.Suspect,
-          message: 'Hello how can I help you?',
-        },
-        {
-          id: 1,
-          sender: Sender.Player,
-          message: 'I need your help',
-        },
-      ],
-    },
-    {
-      id: 6,
-      name: 'Avatar 6',
-      relationship: 'Friend',
-      chatHistory: [
-        {
-          id: 0,
-          sender: Sender.Suspect,
-          message: 'Hello how can I help you?',
-        },
-        {
-          id: 1,
-          sender: Sender.Player,
-          message: 'I need your help',
+          content: 'What can you do?',
         },
       ],
     },

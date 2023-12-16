@@ -1,14 +1,13 @@
-import { Box, Button, Text, VStack, Heading } from '@chakra-ui/react';
-import { FiSearch, FiHelpCircle, FiEye } from 'react-icons/fi';
+import { Box, Button, Text, VStack, Heading, HStack } from '@chakra-ui/react';
+import { FiSearch, FiHelpCircle } from 'react-icons/fi';
+import { AiFillQuestionCircle } from 'react-icons/ai';
+import { useNavigate } from 'react-router';
 
 const MenuPage = () => {
+  const navigate = useNavigate();
+
   return (
-    <Box
-      h="100vh"
-      w="100vw"
-      bg="gray.900" // Dark background
-      color="whiteAlpha.900" // Light text for contrast
-    >
+    <Box bgGradient="linear(to-r, blue.900, gray.800)" h="100vh" w="100vw">
       <VStack spacing={8} align="center" justify="center" h="full">
         {/* Info Box */}
         <Box
@@ -17,7 +16,7 @@ const MenuPage = () => {
           p={8}
           color="white"
           boxShadow="dark-lg"
-          maxWidth="container.md"
+          maxWidth="xl"
           w="full"
           display="flex"
           flexDirection="column"
@@ -37,31 +36,34 @@ const MenuPage = () => {
           </Text>
         </Box>
 
-        <Box display="flex" justifyContent="center" gap={4} w="full">
-          <Button
-            leftIcon={<FiSearch />}
-            colorScheme="purple"
-            size="lg"
-            width="200px"
-          >
-            詢問嫌疑人
-          </Button>
-          <Button
-            leftIcon={<FiEye />}
-            colorScheme="green"
-            size="lg"
-            width="200px"
-          >
-            調查場景及線索
-          </Button>
-          <Button
-            leftIcon={<FiHelpCircle />}
-            colorScheme="orange"
-            size="lg"
-            width="200px"
-          >
-            給我提示
-          </Button>
+        <Box w="full" maxW="lg" mx="auto">
+          <HStack spacing={4} w="full">
+            <Button
+              leftIcon={<FiSearch />}
+              colorScheme="purple"
+              size="lg"
+              flex="1"
+              onClick={() => navigate('/suspects')}
+            >
+              調查嫌疑人場景
+            </Button>
+            <Button
+              leftIcon={<FiHelpCircle />}
+              colorScheme="green"
+              size="lg"
+              flex="1"
+            >
+              給我提示
+            </Button>
+            <Button
+              leftIcon={<AiFillQuestionCircle />}
+              colorScheme="orange"
+              size="lg"
+              flex="1"
+            >
+              我要猜謎
+            </Button>
+          </HStack>
         </Box>
       </VStack>
     </Box>
