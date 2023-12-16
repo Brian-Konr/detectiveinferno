@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Button, Text, VStack, Heading } from '@chakra-ui/react';
 import { FiSearch, FiHelpCircle, FiEye } from 'react-icons/fi';
 
@@ -38,7 +37,6 @@ const MenuPage = () => {
           </Text>
         </Box>
 
-        {/* Action Buttons */}
         <Box display="flex" justifyContent="center" gap={4} w="full">
           <Button
             leftIcon={<FiSearch />}

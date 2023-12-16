@@ -1,1 +1,3 @@
-export interface IStory {}
+export interface IStory {
+  background: string;
+}
