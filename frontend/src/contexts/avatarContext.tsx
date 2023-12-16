@@ -1,18 +1,20 @@
 // AvatarContext.tsx
-import React, { createContext, useState } from 'react';
-import {
-  IAvatar,
-  Sender,
-  IChatMessage,
-  IAvatarContextType,
-} from '../types/Avatar';
+import React, { createContext, useEffect, useState } from 'react';
+import { IAvatar, Sender, IChatMessage } from '../types/Avatar';
+
+export interface IAvatarContextType {
+  avatars: IAvatar[];
+  updateAvatar: (avatar: IAvatar) => void;
+  updateChatHistory: (message: IChatMessage, avatarId: number) => void;
+  loading: boolean;
+  reset: () => void;
+}
 
 const AvatarContext = createContext<IAvatarContextType | undefined>(undefined);
 
-const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [avatars, setAvatars] = useState<IAvatar[]>(getFakeAvatars());
+const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [avatars, setAvatars] = useState<IAvatar[]>([]);
+  const [loading, setLoading] = useState(true);
   const updateChatHistory = (message: IChatMessage, avatarId: number) => {
     const newAvatars = avatars.map((avatar) => {
       if (avatar.id === avatarId) {
@@ -31,12 +33,29 @@ const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     setAvatars(newAvatars);
   };
+
+  const reset = () => {
+    setAvatars(getFakeAvatars());
+    setLoading(true);
+  };
+
+  useEffect(() => {
+    if (avatars.length > 0) {
+      return;
+    }
+    setTimeout(() => {
+      setLoading(false);
+      setAvatars(getFakeAvatars());
+    }, 3000);
+  }, [avatars]);
   return (
     <AvatarContext.Provider
       value={{
         avatars,
         updateAvatar,
         updateChatHistory,
+        loading,
+        reset,
       }}
     >
       {children}
@@ -62,6 +81,7 @@ const getFakeAvatars = () => {
           content: 'I need your help',
         },
       ],
+      isSuspect: true,
     },
     {
       id: 2,
@@ -79,6 +99,7 @@ const getFakeAvatars = () => {
           content: 'I need your help',
         },
       ],
+      isSuspect: true,
     },
     {
       id: 3,
@@ -96,6 +117,7 @@ const getFakeAvatars = () => {
           content: 'I need your help',
         },
       ],
+      isSuspect: true,
     },
     {
       id: 4,
@@ -113,6 +135,7 @@ const getFakeAvatars = () => {
           content: 'What can you do?',
         },
       ],
+      isSuspect: false,
     },
   ];
   return avatars;

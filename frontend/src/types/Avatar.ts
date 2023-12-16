@@ -14,10 +14,5 @@ export interface IAvatar {
   name: string;
   relationship: string;
   chatHistory: IChatMessage[];
-}
-
-export interface IAvatarContextType {
-  avatars: IAvatar[];
-  updateAvatar: (avatar: IAvatar) => void;
-  updateChatHistory: (message: IChatMessage, avatarId: number) => void;
+  isSuspect: boolean;
 }
