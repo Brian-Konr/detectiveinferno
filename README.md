@@ -92,18 +92,21 @@ Returns formatted JSON
 
 Returns a list of information about all avatars
 
-```
+```json
 [
     {
         "姓名": "瑪麗·道爾",
+        "性別": 0, // 0 for female, 1 for male
         "關係": "死者的妻子",
     },
     {
         "姓名": "約瑟夫·貝爾",
+        "性別": 1
         "關係": "死者的朋友，也是一位醫生",
     },
     {
         "姓名": "艾倫·波伊爾",
+        "性別": 1,
         "關係": "死者的秘書",
     }
 ]
