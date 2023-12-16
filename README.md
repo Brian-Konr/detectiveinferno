@@ -84,7 +84,10 @@ Returns formatted JSON
 
 ```json
 {
-  "data": "story information. for example, In a winter..."
+  "data": {
+    "background": "story information. for example, In a winter...",
+    "title": "story title"
+  }
 }
 ```
 
