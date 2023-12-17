@@ -35,7 +35,7 @@ const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
   };
 
   const reset = () => {
-    setAvatars(getFakeAvatars());
+    setAvatars([]);
     setLoading(true);
   };
 
