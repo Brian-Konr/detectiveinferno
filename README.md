@@ -8,9 +8,11 @@
 
 ### Issue
 
-12.13 => Azure 無法使用，只能給企業做使用
-12.14 => max token 壓不下來，因為產生 story background dictionary 就要 1000 token 左右
-12.14 => GET api/scenes 是否是要犯罪現場
+12.17 => `POST /api/messages/push/:id`
+12.17 => rag truncate 的字數
+12.17 => 故事線索要吃甚麼歷史資料
+
+### testing command 
 
 # detectiveinferno
 
@@ -99,17 +101,17 @@ Returns a list of information about all avatars
 [
     {
         "姓名": "瑪麗·道爾",
-        "性別": 0, // 0 for female, 1 for male
+        "性別": "女", 
         "關係": "死者的妻子",
     },
     {
         "姓名": "約瑟夫·貝爾",
-        "性別": 1
+        "性別": "男",
         "關係": "死者的朋友，也是一位醫生",
     },
     {
         "姓名": "艾倫·波伊爾",
-        "性別": 1,
+        "性別": "男",
         "關係": "死者的秘書",
     }
 ]
@@ -123,13 +125,13 @@ Get the dialogue of the character with the given id. id 0~2 are the suspects, id
 {
   "data": [
     {
-      "id": 0, // just a numbered id
+      "m_id": 0, // just a numbered id
       "sender": 0, // 0 for suspect (npc), 1 for player
       "message": "你好，我是瑪麗·道爾，亞瑟的妻子。",
       "timestamp": "2023-12-16T11:24:00.000Z" // this one is optional as long as the order is correct
     },
     {
-      "id": 1,
+      "m_id": 1,
       "sender": 1,
       "message": "你為什麼要殺死亞瑟？",
       "timestamp": "2023-12-16T11:24:00.000Z"
@@ -138,9 +140,9 @@ Get the dialogue of the character with the given id. id 0~2 are the suspects, id
 }
 ```
 
-### `POST /api/messages/push`
+### `POST /api/messages/push/:id` 
 
-Pushes a dialogue to the server
+Pushes a dialogue to the server, id = 0~2
 
 #### Request Body
 
@@ -193,7 +195,7 @@ Pushes a scene query to the server
 ### `POST /api/evaluations`
 
 Return the evaluation of the player after attempting to solve the case
-
+id = 0~2 
 #### Request Body
 
 ```json
@@ -212,5 +214,11 @@ Return the evaluation of the player after attempting to solve the case
     "isCorrect": true,
     "story": "艾倫對亞瑟的遺囑感到不滿，認為這是對他多年的忠誠和努力的蔑視。艾倫在亞瑟獨自在書房工作時，趁機進入書房，用燈重擊亞瑟的頭部，導致亞瑟當場死亡。在現場，警方找到了一個破碎的燈和艾倫的筆記本，這些都成為了他的犯罪證據。在燈的碎片上找到艾倫的指紋，並且在他的筆記本上找到他對亞瑟的怨恨以及他計劃如何殺死亞瑟的詳細描述。"
   }
+}
+```
+### `GET /api/stories/hints`
+```json
+{
+  "data": "提示"
 }
 ```

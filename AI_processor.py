@@ -1,6 +1,12 @@
 import openai
 import json
-from conversation_ai import summary_processor
+from RAG import rag
+from summary import summary_processor
+import os
+import ast
+#### global variable 
+m_list = [[],[],[],[]] 
+
 #### openai processor
 def GPT_processor(length, message, function_description):
     response = openai.ChatCompletion.create(
@@ -15,42 +21,76 @@ def GPT_processor(length, message, function_description):
 
 ###### game creator
 def story_creater():
+    # conversation_count = 0
+    m_list = [[],[],[],[]] 
     #### load start prompt
     f = open('./story_background/start_prompt.txt',encoding="utf-8")
     start_prompt = f.read()
     with open('./story_background/story_background_description.json',encoding="utf-8") as file:
         story_background_description = [json.load(file)]
+
     print("start process AI api")
+       
     story_response = GPT_processor(2000,start_prompt, story_background_description)
     # store the story dictionary result to story.json
+    f2 = open("./story_background/story.txt", "w",encoding="utf-8")
+    f2.write(story_response.choices[0].message.function_call.arguments)
+
     story_object  = json.dumps(story_response.choices[0].message.function_call.arguments)
-    print(story_object.encode('ascii').decode('unicode-escape'))
+    # print(story_object.encode('ascii').decode('unicode-escape'))
     with open("./story_background/story.json", "w") as outfile:
         outfile.write(story_object)
-    f = open("./conversation_file/conversation.txt", "w",encoding="utf-8")
-    f.write(story_response.choices[0].message.function_call.arguments)
-    f.close()
     return story_response.choices[0].message.function_call.arguments
 
 
 ###### suspect creater
-def suspect_creater(target,action):
-    #### load start prompt
+def suspect_creater(id,target,action):
+    #### load suspect prompt
     f = open('./suspect_file/suspect_prompt.txt',encoding="utf-8")
-    f2 = open("./conversation_file/conversation.txt",encoding="utf-8")
     suspect_prompt = f.read()
-    conversation_history = f2.read()
-    suspect_prompt = conversation_history + suspect_prompt + " 你現在是嫌疑人:" + target +"，請回答以下問題：" + action
+    #### load conversation history
+    # f2 = open(f"./suspect_file/suspect_{id}/conversation.txt",encoding="utf-8")
+    # conversation_history = f2.read()
+    keyword = action + "," + target
+    
+    conversation_history=""
+    conversation_file = f"./suspect_file/suspect_{id}/conversation.txt"
+    if os.stat(conversation_file).st_size == 0:
+        conversation_history=""
+    else:
+        conversation_history = rag( keyword, conversation_file )
+
+    #### load story txt
+    # f = open("./story_background/story.txt",encoding="utf-8")
+    story_txt = "./story_background/story.txt"
+    story_txt_summary = rag( keyword, story_txt )
+
+    suspect_prompt = story_txt_summary + "\n" + conversation_history + "\n" + suspect_prompt + " 你現在是嫌疑人:" + target +"，請回答以下問題：" + action
     with open('./suspect_file/suspect_description.json',encoding="utf-8") as file:
         suspect_description = [json.load(file)]
     suspect_response = GPT_processor(200,suspect_prompt, suspect_description)
-    
-    
     # suspect_object  = json.dumps(suspect_response.choices[0].message.function_call.arguments)
-    f = open("./conversation_file/conversation.txt", "a",encoding="utf-8")
-    f.write(json.loads(suspect_response.choices[0].message.function_call.arguments).get("回覆"))
+    
+    #### store to list
+    conversation_information = {
+        "m_id": len(m_list[id]),
+        "sender": 1,
+        "message":action
+    }
+    m_list[id].append(conversation_information)
+
+    conversation_information = {
+        "m_id": len(m_list[id]),
+        "sender": 0,
+        "message":json.loads(suspect_response.choices[0].message.function_call.arguments).get("回覆")
+    }
+    m_list[id].append(conversation_information)
+    ### write to conversation file
+    f = open(f"./suspect_file/suspect_{id}/conversation.txt", "a",encoding="utf-8")
+    f.write(f"玩家:{action}\n")
+    f.write( f"{target}:{ json.loads(suspect_response.choices[0].message.function_call.arguments).get('回覆') }\n" )
     f.close()
-    summary_processor()
+    # summary_processor()
     print(json.loads(suspect_response.choices[0].message.function_call.arguments).get("回覆"))
     # print(suspect_object.encode('ascii').decode('unicode-escape'))
     # return suspect_response.choices[0].message.content
@@ -64,19 +104,52 @@ def suspect_creater(target,action):
 def scene_creater(action):
     #### load start prompt
     f = open('./scene_file/scene_prompt.txt',encoding="utf-8")
-    f2 = open("./conversation_file/conversation.txt",encoding="utf-8")
     scene_prompt = f.read()
-    conversation_history = f2.read()
-    scene_prompt = conversation_history + scene_prompt + "，回答以下問題:" + action
+    
+    #### load scene_conversation 
+    # f2 = open("./conversation_file/conversation.txt",encoding="utf-8")
+    # conversation_history = f2.read()
+    keyword = action + ",場景"
+    conversation_history=""
+    conversation_file = f"./scene_file/conversation.txt"
+    if os.stat(conversation_file).st_size == 0:
+        conversation_history=""
+    else:
+        conversation_history = rag( keyword, conversation_file )
+
+
+    #### load story txt
+    story_txt = "./story_background/story.txt"
+    story_txt_summary = rag( keyword, story_txt )
+
+    scene_prompt = story_txt_summary + "\n" + conversation_history + "\n" + scene_prompt + "，回答以下問題:" + action
     with open('./scene_file/scene_description.json',encoding="utf-8") as file:
         scene_description = [json.load(file)]
-    scene_response = GPT_processor(200,scene_prompt, scene_description)
+    scene_response = GPT_processor(400,scene_prompt, scene_description)
+    
+    #### store to list
+    conversation_information = {
+        "m_id": len(m_list[3]),
+        "sender": 1,
+        "message":action
+    }
+    m_list[3].append(conversation_information)
+
+    conversation_information = {
+        "m_id": len(m_list[3]),
+        "sender": 0,
+        "message":json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆")
+    }
+    m_list[3].append(conversation_information)
+
+
     # scene_object  = json.dumps(scene_response.choices[0].message.function_call.arguments)
-    f = open("./conversation_file/conversation.txt", "a",encoding="utf-8")
-    f.write(json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆"))
+    f = open("./scene_file/conversation.txt", "a",encoding="utf-8")
+    f.write(f"玩家:{action}\n")
+    f.write( f"場景:{ json.loads(scene_response.choices[0].message.function_call.arguments).get('回覆') }\n" )
     print(json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆"))
     f.close()
-    summary_processor()
+    # summary_processor()
     # print(scene_object.encode('ascii').decode('unicode-escape'))
     return json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆")
     # print(scene_response)
@@ -87,25 +160,85 @@ def scene_creater(action):
 def final_answer_creater(id, motivation, action):
     #### load start prompt
     f = open('./final_answer_file/final_answer_prompt.txt',encoding="utf-8")
-    f2 = open("./conversation_file/conversation.txt",encoding="utf-8")
     fa_prompt = f.read()
-    conversation_history = f2.read()
-    fa_prompt = conversation_history + fa_prompt
+
+    #### load story txt
+    story_txt = "./story_background/story.txt"
+    story_txt_summary = rag("結果",story_txt)
+
+    fa_prompt = story_txt_summary + "\n" + fa_prompt
     with open('./final_answer_file/final_answer_description.json',encoding="utf-8") as file:
         final_answer_description = [json.load(file)]
     final_answer_response = GPT_processor(800,fa_prompt, final_answer_description)
     # store the story dictionary result to story.json
     # final_answer_object  = json.dumps(final_answer_response.choices[0].message.function_call.arguments)
-    f = open("./conversation_file/conversation.txt", "a",encoding="utf-8")
-    f.write(json.loads(final_answer_response.choices[0].message.function_call.arguments).get("真相"))
-    f.close()
+    # f = open("./conversation_file/conversation.txt", "a",encoding="utf-8")
+    # f.write(json.loads(final_answer_response.choices[0].message.function_call.arguments).get("真相"))
+    # f.close()
     # summary_processor()
     # print(final_answer_object.encode('ascii').decode('unicode-escape'))
+    print(json.loads(final_answer_response.choices[0].message.function_call.arguments).get("真相"))
     return json.loads(final_answer_response.choices[0].message.function_call.arguments).get("真相")
-    
 
+#### hint creater  
+def hint_creater():
+    #### load start prompt
+    f = open('./story_background/hint_prompt.txt',encoding="utf-8")
+    hint_prompt = f.read()
+
+
+    #### load story txt
+    story_txt = "./story_background/story.txt"
+    story_txt_summary = rag("故事線索",story_txt)
+
+
+    hint_prompt = story_txt_summary + "\n" + hint_prompt 
+    with open('./story_background/hint_description.json',encoding="utf-8") as file:
+        hint_description = [json.load(file)]
+    hint_response = GPT_processor(200,hint_prompt, hint_description)
     
-    
+    f = open(f"./story_background/hints_history.txt", "a",encoding="utf-8")
+    f.write(json.loads(hint_response.choices[0].message.function_call.arguments).get("回覆"))
+    f.close()
+    print( json.loads(hint_response.choices[0].message.function_call.arguments).get("回覆") )
+
+    return json.loads(hint_response.choices[0].message.function_call.arguments).get("回覆")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def message_creater(id):
+#     file = []
+#     if id < 3:
+#         file = open(f"./suspect_file/suspect_{id}/conversation.txt",encoding="utf-8")
+#     else:
+#         file = open(f"./scene_file/conversation.txt",encoding="utf-8")
+#     conversation_list = file.readlines() #list
+#     for lines in conversation_list:
+
     
     
     

@@ -4,6 +4,10 @@
     "parameters":{
         "type":"object",
         "properties":{
+            "標題":{
+                "type":"string",
+                "description":"story title"
+            },
             "故事大綱":{
                 "type":"string",
                 "description":"story summary"
@@ -23,6 +27,28 @@
             "死因": {
                 "type":"string",
                 "description":"cause of death"
+            },
+            "嫌疑人資訊":{
+                "type":"array",
+                "description": "informations of suspects",
+                "items":{
+                    "type":"object",
+                    "properties":{
+                        "姓名":{
+                            "type":"string",
+                            "description":"name"
+                        },
+                        "性別":{
+                            "type":"string",
+                            "description":"gender"
+                        },
+                        "關係":{
+                            "type":"string",
+                            "description":"relationship with deceased"
+                        }
+                    },
+                    "required":["姓名","性別","關係"]
+                }
             },
             "嫌疑人": {
                 "type":"array",
@@ -136,6 +162,6 @@
                 "required":["犯人","動機","作案過程","證據"]
             }
         },
-        "required":["故事大綱","時間","地點","死者","死因","嫌疑人","場景","線索","結果"]
+        "required":["標題","故事大綱","時間","地點","死者","死因","嫌疑人","嫌疑人資訊","場景","線索","結果"]
     }
 }

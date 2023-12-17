@@ -1,0 +1,15 @@
+{
+    "name": "hint_description",
+    "description": "provide a hint of the story",
+    "parameters":{
+        "type":"object",
+        "properties":{
+            "回覆":{
+                "type":"string",
+                "description":"description"
+            }
+        },
+        "required":["回覆"]
+    }
+
+}
