@@ -24,6 +24,7 @@ import {
   Select,
   Spinner,
   Center,
+  useToast,
 } from '@chakra-ui/react';
 
 import { FiSearch, FiHelpCircle } from 'react-icons/fi';
@@ -34,9 +35,11 @@ import { StoryContext, StoryContextType } from '../contexts/storyContext';
 import { AvatarContext, IAvatarContextType } from '../contexts/avatarContext';
 import { GuessContext, GuessContextType } from '../contexts/guessContext';
 import { MdSend } from 'react-icons/md';
+import { getHints } from '../agent';
 
 const MenuPage = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [isFetchingHint, setIsFetchingHint] = useState(false);
   const { isOpen: isHintOpen, onOpen: onHintOpen, onClose: onHintClose } = useDisclosure();
 
@@ -46,18 +49,36 @@ const MenuPage = () => {
 
   const { avatars, loading: avatarLoading } = useContext(AvatarContext) as IAvatarContextType;
 
+  const [hintText, setHintText] = useState('');
+
   const { suspectId, motivation, method, setMethod, setMotivation, setSuspectId, isValid } = useContext(
     GuessContext,
   ) as GuessContextType;
 
   useEffect(() => {
     if (isFetchingHint) {
-      setTimeout(() => {
-        setIsFetchingHint(false);
-        onHintOpen();
-      }, 1000);
+      const fetchHint = async () => {
+        try {
+          const hint = (await getHints()).data.data;
+          setHintText(hint);
+          onHintOpen();
+        } catch (error) {
+          console.error(`Filed to fetch hint: ${error}`);
+          toast({
+            title: '錯誤',
+            description: '獲取提示失敗',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+            position: 'top',
+          });
+        } finally {
+          setIsFetchingHint(false);
+        }
+      };
+      fetchHint();
     }
-  }, [isFetchingHint, onHintOpen]);
+  }, [isFetchingHint, onHintOpen, toast]);
 
   const MenuButton = ({
     leftIcon,
@@ -129,7 +150,7 @@ const MenuPage = () => {
               <PopoverArrow />
               <PopoverCloseButton />
               <PopoverHeader>Hint</PopoverHeader>
-              <PopoverBody>Your hint goes here</PopoverBody>
+              <PopoverBody>{hintText}</PopoverBody>
             </PopoverContent>
           </Popover>
           {/* Guess Modal */}

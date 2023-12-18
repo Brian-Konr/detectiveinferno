@@ -1,22 +1,34 @@
 # ADL_final Project
 
-### TODOs
-
-1. 透過 prompt 1 生成故事和人物背景 [已完成]
-2. 透過 prompt 3 生成專門描述場景的 AI [已完成]
-3. 各個 嫌疑人專門 AI [尚未處理]
-
-### Issue
-
-12.17 => `POST /api/messages/push/:id`
-12.17 => rag truncate 的字數
-12.17 => 故事線索要吃甚麼歷史資料
-
-### testing command 
-
 # detectiveinferno
 
 Welcome to DetectiveInferno, an immersive detective game generator and interactive storytelling platform! Dive into the world of mystery and intrigue as you investigate a crime, interrogate suspects, and unravel the secrets hidden within the narrative.
+
+## Frontend Service
+
+This project was bootstrapped with Vite.
+
+### Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- You have installed Node.js version 20.5 or later. You can check your Node.js version by running node -v in your terminal.
+- You have a recent version of npm installed. You can check your npm version by running npm -v in your terminal.
+
+### Installing Frontend Service
+
+To install the Frontend Service, follow these steps:
+
+- Navigate to the frontend directory in your terminal.
+- Run `npm install` to install the project dependencies.
+
+### Running Frontend Service
+
+To start the Frontend Service in development mode, follow these steps:
+
+- Navigate to the frontend directory in your terminal.
+- Run `npm run dev`.
+- The application will start and should be available at http://localhost:5173 (or another port if 5173 is not available).
 
 ## Example Detailed Information Dictionary
 
@@ -99,21 +111,21 @@ Returns a list of information about all avatars
 
 ```json
 [
-    {
-        "姓名": "瑪麗·道爾",
-        "性別": "女", 
-        "關係": "死者的妻子",
-    },
-    {
-        "姓名": "約瑟夫·貝爾",
-        "性別": "男",
-        "關係": "死者的朋友，也是一位醫生",
-    },
-    {
-        "姓名": "艾倫·波伊爾",
-        "性別": "男",
-        "關係": "死者的秘書",
-    }
+  {
+    "姓名": "瑪麗·道爾",
+    "性別": "女",
+    "關係": "死者的妻子"
+  },
+  {
+    "姓名": "約瑟夫·貝爾",
+    "性別": "男",
+    "關係": "死者的朋友，也是一位醫生"
+  },
+  {
+    "姓名": "艾倫·波伊爾",
+    "性別": "男",
+    "關係": "死者的秘書"
+  }
 ]
 ```
 
@@ -140,7 +152,7 @@ Get the dialogue of the character with the given id. id 0~2 are the suspects, id
 }
 ```
 
-### `POST /api/messages/push/:id` 
+### `POST /api/messages/push/:id`
 
 Pushes a dialogue to the server, id = 0~2
 
@@ -195,7 +207,8 @@ Pushes a scene query to the server
 ### `POST /api/evaluations`
 
 Return the evaluation of the player after attempting to solve the case
-id = 0~2 
+id = 0~2
+
 #### Request Body
 
 ```json
@@ -216,7 +229,9 @@ id = 0~2
   }
 }
 ```
+
 ### `GET /api/stories/hints`
+
 ```json
 {
   "data": "提示"

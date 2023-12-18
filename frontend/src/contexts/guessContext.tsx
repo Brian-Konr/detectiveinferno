@@ -21,14 +21,14 @@ const GuessProvider = ({ children }: { children: ReactNode }) => {
 
   const reset = () => {
     // Define the reset function
-    setSuspectId(0);
+    setSuspectId(-1);
     setMethod('');
     setMotivation('');
     setIsValid(false);
   };
 
   useEffect(() => {
-    if (suspectId !== 0 && method !== '' && motivation !== '') {
+    if (suspectId !== -1 && method !== '' && motivation !== '') {
       setIsValid(true);
     } else {
       setIsValid(false);

@@ -1,16 +1,18 @@
-import { Box, Text, Button, Spinner, Heading, Center } from '@chakra-ui/react';
+import { Box, Text, Button, Spinner, Heading, Center, useToast } from '@chakra-ui/react';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GuessContext, GuessContextType } from '../contexts/guessContext';
 import { StoryContext, StoryContextType } from '../contexts/storyContext';
 import { AvatarContext, IAvatarContextType } from '../contexts/avatarContext';
+import { postEvaluation } from '../agent';
 
 const EndingPage = () => {
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [isCorrectGuess, SetIsCorrectGuess] = useState(false);
+  const [isCorrectGuess, setIsCorrectGuess] = useState(false);
   const [truth, setTruth] = useState('');
   const navigate = useNavigate();
-  const { isValid } = useContext(GuessContext) as GuessContextType;
+  const { isValid, suspectId, method, motivation } = useContext(GuessContext) as GuessContextType;
 
   const { reset: resetGuess } = useContext(GuessContext) as GuessContextType;
   const { reset: resetStory } = useContext(StoryContext) as StoryContextType;
@@ -18,18 +20,35 @@ const EndingPage = () => {
 
   useEffect(() => {
     if (isValid) {
-      // call API to check if guess is correct
-      setTimeout(() => {
-        SetIsCorrectGuess(true);
-        setTruth('The butler did it!');
-        setLoading(false);
-      }, 1200);
+      const getEvaluation = async () => {
+        try {
+          const { data: evaluationResponse } = await postEvaluation({
+            ID: suspectId,
+            動機: motivation,
+            作案手法: method,
+          });
+          setIsCorrectGuess(evaluationResponse.data.isCorrect);
+          setTruth(evaluationResponse.data.story);
+        } catch (error) {
+          toast({
+            title: '錯誤',
+            description: '獲取結局失敗',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+            position: 'top',
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+      getEvaluation();
     } else {
       setTimeout(() => {
         navigate('/menu');
       }, 1000);
     }
-  }, [isValid, navigate]);
+  }, [isValid, navigate, suspectId, method, motivation, toast]);
 
   return (
     <Box
@@ -49,7 +68,7 @@ const EndingPage = () => {
           </Center>
         ) : (
           <Box
-            backgroundColor="rgba(0, 0, 0, 0.8)"
+            backgroundColor="rgba(0, 0, 0, 0.75)"
             p={4}
             borderRadius="lg"
             boxShadow="lg"
@@ -57,13 +76,10 @@ const EndingPage = () => {
             maxWidth="xl"
           >
             <Heading as="h2" mb={4}>
-              {isCorrectGuess ? 'Congratulations! You solved the case!' : 'Oh no! Your guess was incorrect.'}
+              {isCorrectGuess ? '恭喜你答對了！' : '很可惜，你答錯了！'}
             </Heading>
             <Text fontSize="xl" mb={8}>
-              The truth is: {truth}
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati voluptates eos sapiente eligendi
-              delectus, asperiores est quo, ea libero et minus at, laudantium labore ex. Excepturi harum amet autem
-              molestias!
+              {truth}
             </Text>
             <Button
               colorScheme="blue"
