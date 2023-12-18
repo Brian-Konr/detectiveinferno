@@ -19,6 +19,7 @@ def checker():
 
 
 def cleaner():
+    AI_processor.m_list=[[],[],[],[]]
     open("./story_background/story.json", 'w').close()
     open("./story_background/story.txt", 'w').close()
     open("./story_background/hints_history.txt", 'w').close()
