@@ -63,7 +63,7 @@ type HintResponse = {
 
 // Create axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:4000/api',
 });
 
 // Define API methods

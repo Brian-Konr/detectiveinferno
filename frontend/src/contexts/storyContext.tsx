@@ -1,5 +1,6 @@
 import { createContext, useState, ReactNode, useEffect } from 'react';
 import { IStory } from '../types/Story';
+import { getStory } from '../agent';
 
 export type StoryContextType = {
   story: IStory;
@@ -30,17 +31,23 @@ const StoryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (story.title === '') {
-      setTimeout(() => {
-        setStory({
-          title: '巴黎古堡的謀殺案',
-          background:
-            '2023年6月15日的晚上，在巴黎一座宏偉的古堡內，富有的藝術收藏家阿爾貝托·德拉羅沙被發現被毒死。死者的身上沒有明顯的外傷，死因初步確定為中毒，毒物為氰化物。',
-        });
-        setLoading(false);
-      }, 1000);
+    if (loading) {
+      const fetchStory = async () => {
+        try {
+          const { data: fetchedStory } = await getStory();
+          setStory({
+            background: fetchedStory.data,
+            title: fetchedStory.title,
+          });
+        } catch (error) {
+          console.error(`Filed to fetch story: ${error}`);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchStory();
     }
-  }, [story]);
+  }, [loading]);
 
   return (
     <StoryContext.Provider value={{ story, setStory: updateStory, loading, reset }}>{children}</StoryContext.Provider>
