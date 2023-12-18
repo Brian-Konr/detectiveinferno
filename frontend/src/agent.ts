@@ -31,11 +31,11 @@ type PushMessageRequest = {
   行動: string;
 };
 
-type PushMessageResponse = {
+export type PushMessageResponse = {
   data: string;
 };
 
-type SceneResponse = {
+export type SceneResponse = {
   data: string;
 };
 

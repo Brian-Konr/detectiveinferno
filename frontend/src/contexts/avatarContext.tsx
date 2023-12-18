@@ -1,7 +1,9 @@
 // AvatarContext.tsx
 import React, { createContext, useEffect, useState } from 'react';
-import { IAvatar, Sender, IChatMessage } from '../types/Avatar';
+import { IAvatar, Sex, IChatMessage, Sender } from '../types/Avatar';
+import { getAvatars, getMessages, getScenes } from '../agent';
 
+const MAX_SCENE_SUMMARY_LENGTH = 14;
 export interface IAvatarContextType {
   avatars: IAvatar[];
   updateAvatar: (avatar: IAvatar) => void;
@@ -40,14 +42,58 @@ const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
   };
 
   useEffect(() => {
-    if (avatars.length > 0) {
-      return;
+    if (loading) {
+      const fetchAvatars = async () => {
+        try {
+          const { data: avatarsResponse } = await getAvatars();
+          const chatHistories = await Promise.all([0, 1, 2, 3].map((avatarId) => fetchChatHistory(avatarId)));
+          const sceneSummary = (await getScenes()).data.data;
+          let id = 0;
+          const avatars = avatarsResponse.map((avatar) => {
+            const mappedAvatar: IAvatar = {
+              id,
+              name: avatar.姓名,
+              relationship: avatar.關係,
+              chatHistory: chatHistories[id],
+              sex: avatar.性別 as Sex,
+              isSuspect: true,
+            };
+            id++;
+            return mappedAvatar;
+          });
+          // also add the scene bot
+          avatars.push({
+            id,
+            name: '場景',
+            relationship:
+              sceneSummary.length > MAX_SCENE_SUMMARY_LENGTH
+                ? sceneSummary.slice(0, MAX_SCENE_SUMMARY_LENGTH) + '...'
+                : sceneSummary,
+            chatHistory: chatHistories[id],
+            sex: Sex.Male,
+            isSuspect: false,
+          });
+          setAvatars(avatars);
+          setLoading(false);
+        } catch (error) {
+          console.error(`Filed to fetch avatars: ${error}`);
+        }
+      };
+      fetchAvatars();
     }
-    setTimeout(() => {
-      setLoading(false);
-      setAvatars(getFakeAvatars());
-    }, 3000);
-  }, [avatars]);
+  }, [loading]);
+
+  const fetchChatHistory = async (avatarId: number): Promise<IChatMessage[]> => {
+    const { data: chatHistoryResponse } = await getMessages(avatarId);
+    const chatHistory = chatHistoryResponse.data;
+    return chatHistory.map((message) => {
+      return {
+        id: message.m_id,
+        sender: message.sender === 0 ? Sender.Npc : Sender.Player,
+        content: message.message,
+      };
+    });
+  };
   return (
     <AvatarContext.Provider
       value={{
@@ -63,81 +109,4 @@ const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
   );
 };
 
-const getFakeAvatars = () => {
-  const avatars: IAvatar[] = [
-    {
-      id: 1,
-      name: 'Avatar 1',
-      relationship: 'Friend',
-      chatHistory: [
-        {
-          id: 0,
-          sender: Sender.Npc,
-          content: 'Hello how can I help you?',
-        },
-        {
-          id: 1,
-          sender: Sender.Player,
-          content: 'I need your help',
-        },
-      ],
-      isSuspect: true,
-    },
-    {
-      id: 2,
-      name: 'Avatar 2',
-      relationship: 'Friend',
-      chatHistory: [
-        {
-          id: 0,
-          sender: Sender.Npc,
-          content: 'Hello how can I help you?',
-        },
-        {
-          id: 1,
-          sender: Sender.Player,
-          content: 'I need your help',
-        },
-      ],
-      isSuspect: true,
-    },
-    {
-      id: 3,
-      name: 'Avatar 3',
-      relationship: 'Friend',
-      chatHistory: [
-        {
-          id: 0,
-          sender: Sender.Npc,
-          content: 'Hello how can I help you?',
-        },
-        {
-          id: 1,
-          sender: Sender.Player,
-          content: 'I need your help',
-        },
-      ],
-      isSuspect: true,
-    },
-    {
-      id: 4,
-      name: 'Crime Theme',
-      relationship: 'Find what you need!',
-      chatHistory: [
-        {
-          id: 0,
-          sender: Sender.Npc,
-          content: 'Hello I am the crime theme bot',
-        },
-        {
-          id: 1,
-          sender: Sender.Player,
-          content: 'What can you do?',
-        },
-      ],
-      isSuspect: false,
-    },
-  ];
-  return avatars;
-};
 export { AvatarContext, AvatarProvider };

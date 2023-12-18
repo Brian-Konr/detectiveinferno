@@ -1,11 +1,26 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Box, Avatar, HStack, VStack, Text, Button, Flex, useTheme, Input, Spinner, Center } from '@chakra-ui/react';
+import {
+  Box,
+  Avatar,
+  HStack,
+  VStack,
+  Text,
+  Button,
+  Flex,
+  useTheme,
+  Input,
+  Spinner,
+  Center,
+  useToast,
+} from '@chakra-ui/react';
 import { AvatarContext, IAvatarContextType } from '../contexts/avatarContext';
-import { Sender } from '../types/Avatar';
+import { Sender, Sex } from '../types/Avatar';
 import { useNavigate } from 'react-router';
 import { FiArrowLeftCircle } from 'react-icons/fi';
+import { PushMessageResponse, SceneResponse, pushMessage, pushSceneQuery } from '../agent';
 
 const SuspectInvestigationPage: React.FC = () => {
+  const toast = useToast();
   const navigate = useNavigate();
   const { avatars, updateChatHistory, loading } = useContext(AvatarContext) as IAvatarContextType;
   const theme = useTheme();
@@ -16,6 +31,7 @@ const SuspectInvestigationPage: React.FC = () => {
     [key: number]: React.RefObject<HTMLDivElement>;
   }>({});
   const [focusedBox, setFocusedBox] = useState<number | null>(null);
+  const [isNpcThinking, setIsNpcThinking] = useState([false, false, false, false]);
 
   useEffect(() => {
     setChatEndRefs(() =>
@@ -34,6 +50,38 @@ const SuspectInvestigationPage: React.FC = () => {
       chatEndRefs[avatar.id]?.current?.scrollIntoView({ behavior: 'smooth' });
     });
   }, [avatars, chatEndRefs]);
+
+  const getAvatarResponseAndUpdateChatHistory = async (avatarId: number, query: string) => {
+    setIsNpcThinking((prev) => prev.map((_, index) => (index === avatarId ? true : _)));
+    try {
+      let avatarResponse: SceneResponse | PushMessageResponse;
+      if (avatars[avatarId].isSuspect) {
+        avatarResponse = (await pushMessage(avatarId, { 目標: avatars[avatarId].name, 行動: query })).data;
+      } else {
+        avatarResponse = (await pushSceneQuery({ 目標: avatars[avatarId].name, 行動: query })).data;
+      }
+      const avatar = avatars[avatarId];
+      updateChatHistory(
+        {
+          id: avatar.chatHistory.length + 1,
+          sender: Sender.Npc,
+          content: avatarResponse.data,
+        },
+        avatar.id,
+      );
+      return avatarResponse.data;
+    } catch (error) {
+      toast({
+        title: 'An error occurred.',
+        description: 'Unable to fetch data.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsNpcThinking((prev) => prev.map((_, index) => (index === avatarId ? false : _)));
+    }
+  };
   return (
     <Box bgImage="url('/inquiry_bg.png')">
       {loading ? (
@@ -62,18 +110,23 @@ const SuspectInvestigationPage: React.FC = () => {
                     name={avatar.name}
                     src={
                       avatar.isSuspect // 4 is the bot
-                        ? '/suspect_woman.png'
+                        ? avatar.sex === Sex.Male
+                          ? '/suspect_man.png'
+                          : '/suspect_woman.png'
                         : '/theme_bot_icon.png'
                     }
                   />
-                  <VStack align="start" spacing={1}>
-                    <Text fontWeight="bold" color="white">
-                      {avatar.name}
-                    </Text>
-                    <Text fontWeight="bold" color="gray.200">
-                      {avatar.relationship}
-                    </Text>
-                  </VStack>
+                  <Box display="flex" justifyContent="space-between" w="full">
+                    <VStack align="start" spacing={1}>
+                      <Text fontWeight="bold" color="white">
+                        {avatar.name}
+                      </Text>
+                      <Text fontWeight="bold" color="gray.200">
+                        {avatar.relationship}
+                      </Text>
+                    </VStack>
+                    {isNpcThinking[avatar.id] && <Spinner color="white" />}
+                  </Box>
                 </HStack>
                 {/* Scrollable chat history */}
                 <Box
@@ -82,7 +135,7 @@ const SuspectInvestigationPage: React.FC = () => {
                   borderRadius="md"
                   minH="40vh"
                   maxH="40vh"
-                  maxW="50vw"
+                  maxW="full"
                   overflowY="auto"
                   bg={theme.colors.gray[50]}
                 >
@@ -102,9 +155,10 @@ const SuspectInvestigationPage: React.FC = () => {
                   <div ref={chatEndRefs[avatar.id]} />
                 </Box>
                 {/* Input field and Send button */}
-                <Box mt={2}>
-                  <HStack mt={2} p={2} spacing={3} bg="gray.800" borderRadius="md">
+                <Box mt={2} display="flex" justifyContent="space-between">
+                  <HStack mt={2} p={2} spacing={3} bg="gray.800" borderRadius="md" w="full">
                     <form
+                      style={{ width: '100%' }}
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!inputFieldMessages[avatar.id]) return;
@@ -112,18 +166,12 @@ const SuspectInvestigationPage: React.FC = () => {
                           {
                             id: avatar.chatHistory.length + 1,
                             sender: Sender.Player,
-                            content: inputFieldMessages[avatar.id] || '',
+                            content: inputFieldMessages[avatar.id],
                           },
                           avatar.id,
                         );
-                        updateChatHistory(
-                          {
-                            id: avatar.chatHistory.length + 1,
-                            sender: Sender.Npc,
-                            content: inputFieldMessages[avatar.id] || '',
-                          },
-                          avatar.id,
-                        );
+                        getAvatarResponseAndUpdateChatHistory(avatar.id, inputFieldMessages[avatar.id]);
+
                         setInputFieldMessages((prev) => ({
                           ...prev,
                           [avatar.id]: '',
@@ -150,7 +198,7 @@ const SuspectInvestigationPage: React.FC = () => {
                           color="white"
                           _hover={{ bg: 'blue.600' }}
                           type="submit"
-                          isDisabled={!inputFieldMessages[avatar.id]}
+                          isDisabled={!inputFieldMessages[avatar.id] || isNpcThinking[avatar.id]}
                         >
                           送出
                         </Button>

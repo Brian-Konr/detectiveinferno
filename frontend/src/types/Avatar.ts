@@ -3,6 +3,11 @@ export enum Sender {
   Player,
 }
 
+export enum Sex {
+  Male = '男',
+  Female = '女',
+}
+
 export interface IChatMessage {
   id: number;
   sender: Sender;
@@ -15,4 +20,5 @@ export interface IAvatar {
   relationship: string;
   chatHistory: IChatMessage[];
   isSuspect: boolean;
+  sex: Sex;
 }
