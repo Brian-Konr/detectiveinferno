@@ -3,10 +3,8 @@ import axios from 'axios';
 // Define request and response types
 // Define response types
 type StoryResponse = {
-  data: {
-    background: string;
-    title: string;
-  };
+  data: string;
+  title: string;
 };
 
 type Avatar = {
@@ -69,6 +67,8 @@ const api = axios.create({
 });
 
 // Define API methods
+export const getStory = () => api.get<StoryResponse>('/stories');
+export const getAvatars = () => api.get<AvatarsResponse>('/avatars');
 export const getMessages = (id: number) => api.get<MessageResponse>(`/messages/${id}`);
 export const pushMessage = (id: number, body: PushMessageRequest) =>
   api.post<PushMessageResponse>(`/messages/push/${id}`, body);
@@ -76,5 +76,3 @@ export const getScenes = () => api.get<SceneResponse>('/scenes');
 export const pushSceneQuery = (body: SceneQueryRequest) => api.post<SceneResponse>('/scenes', body);
 export const postEvaluation = (body: EvaluationRequest) => api.post<EvaluationResponse>('/evaluations', body);
 export const getHints = () => api.get<HintResponse>('/stories/hints');
-export const getStory = () => api.get<StoryResponse>('/stories');
-export const getAvatars = () => api.get<AvatarsResponse>('/avatars');
