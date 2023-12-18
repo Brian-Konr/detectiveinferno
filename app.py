@@ -3,8 +3,10 @@ import json
 import os
 from AI_processor import story_creater, suspect_creater, scene_creater, final_answer_creater, hint_creater
 import AI_processor
+from flask_cors import CORS, cross_origin
 print(AI_processor.m_list)
 app = Flask(__name__)
+CORS(app)
 story_json = {}
 def checker():
     if os.stat("./story_background/story.json").st_size == 0:
