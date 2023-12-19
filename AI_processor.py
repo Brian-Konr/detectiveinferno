@@ -22,15 +22,40 @@ embedding_function = SentenceTransformerEmbeddings(model_name="sentence-transfor
 def get_current_db():
     global db_0, db_1, db_2, db_3, db_4
     global db_len
-    db_0 = Chroma(persist_directory='./db/story', embedding_function=embedding_function)
-    db_1 = Chroma(persist_directory='./db/suspect_1', embedding_function=embedding_function)
-    db_2 = Chroma(persist_directory='./db/suspect_2', embedding_function=embedding_function)
-    db_3 = Chroma(persist_directory='./db/suspect_3', embedding_function=embedding_function)
-    db_4 = Chroma(persist_directory='./db/scene', embedding_function=embedding_function)
+    #### check story DB
+    if(os.path.exists('./db/story')):
+        db_0 = Chroma(persist_directory='./db/story', embedding_function=embedding_function)
+    else:
+        print("story DB has some problem")
+        print("Recreate story DB")
+        db_0, db_len[0] = add_database("./story_background/story.txt", './db/story', 1)
+    suspect_db = 0
+    #### check suspect DB
+    if(os.path.exists('./db/suspect_1')):
+        db_1 = Chroma(persist_directory='./db/suspect_1', embedding_function=embedding_function)
+        suspect_db += 1
+    if(os.path.exists('./db/suspect_2')):
+        db_2 = Chroma(persist_directory='./db/suspect_2', embedding_function=embedding_function)
+        suspect_db += 1
+    if(os.path.exists('./db/suspect_3')):
+        db_3 = Chroma(persist_directory='./db/suspect_3', embedding_function=embedding_function)
+        suspect_db += 1
+    if(suspect_db != 3):
+        print("suspect DB has some problem")
+        print("Recreate suspect DB")
+        db_len = rich_character_info()
+    #### check scene DB
+    if(os.path.exists('./db/scene')):
+        db_4 = Chroma(persist_directory='./db/scene', embedding_function=embedding_function)
+    else:
+        print("scene DB has some problem")
+        print("Recreate scene DB")
+        rich_scene_info()
     db_len = [len(db_0.get()['ids']),len(db_1.get()['ids']),len(db_2.get()['ids']),len(db_3.get()['ids']),len(db_4.get()['ids'])]
     print("Get current db")
     print("DB len:")
     print(db_len)
+    print("Please make sure every number in DB len is bigger than 1 (not including 1).")
 
 def reset_db():
     global db_0, db_1, db_2, db_3, db_4
@@ -93,6 +118,19 @@ def story_creater():
     db_0, db_len[0] = add_database("./story_background/story.txt", './db/story', 1)
     print("DB status")
     print(db_len)
+
+    #### rich character info
+    print("rich character info")
+    db_len = rich_character_info()
+    print("DB status")
+    print(db_len)
+
+    #### rich scene info
+    print("rich scene info")
+    rich_scene_info()
+    print("DB status")
+    print(db_len)
+
     
     return story_response.choices[0].message.function_call.arguments
 
@@ -127,9 +165,6 @@ def rich_character_info():
 def suspect_creater(id,target,action):
     global db_1, db_2, db_3
     global db_len
-    #### Check rich character info
-    if os.stat("./suspect_file/suspect_0/rich_suspect_info.txt").st_size == 0:
-        db_len = rich_character_info()
     #### load suspect prompt
     f = open('./suspect_file/suspect_prompt.txt',encoding="utf-8")
     suspect_prompt = f.read()
@@ -215,9 +250,6 @@ def rich_scene_info():
 ###### scene_creater
 def scene_creater(action):
     global db_4, db_len
-    #### Check rich scene info
-    if os.stat("./scene_file/rich_scene_info.txt").st_size == 0:
-        rich_scene_info()
     #### load start prompt
     f = open('./scene_file/scene_prompt.txt',encoding="utf-8")
     scene_prompt = f.read()
