@@ -1,6 +1,9 @@
 import openai
 import os
 from dotenv import load_dotenv
+from AI_processor import story_creater, suspect_creater, scene_creater, final_answer_creater, hint_creater, get_current_db, reset_db
+import AI_processor
+import json
 
 load_dotenv()
 
@@ -79,3 +82,29 @@ def summary():
     print(response.choices[0]['message']['content'])
     with open('./summary/data/sum_dict_L2M7.txt', 'w',encoding="utf-8") as f:
         f.write(response.choices[0]['message']['content'])
+
+
+# f = open("./story_background/story.json")
+# story_json = json.load(f)
+# suspects_list = json.loads(story_json).get("嫌疑人")
+    
+# get_current_db()
+        
+reset_db()
+
+# story_creater()
+
+
+with open('./story_background/story.txt',encoding="utf-8") as f:
+    story = f.read()
+story_object = json.dumps(story)
+
+with open('./story_background/story.json', "w",encoding="utf-8") as f:
+    f.write(story_object)
+
+
+# suspect_creater(0, suspects_list[0]["姓名"], "案發當晚你在哪裡？")
+        
+# suspect_creater(1, suspects_list[1]["姓名"], "案發當晚你在哪裡？")
+
+# scene_creater("你可以幫我描述一下案發現場嗎？")

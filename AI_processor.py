@@ -1,19 +1,66 @@
 import openai
 import json
-from RAG import rag
+from RAG import add_database, search_docs
 from summary import summary_processor
 import os
+import shutil
 import ast
+from prompt_function import rich_character, character, rich_place, summary
+from langchain.vectorstores import Chroma
+from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 #### global variable 
 m_list = [[],[],[],[]] 
+#### global DB
+db_0 = Chroma()  ## story DB
+db_1 = Chroma()  ## suspect 1 DB
+db_2 = Chroma()  ## suspect 2 DB
+db_3 = Chroma()  ## suspect 3 DB
+db_4 = Chroma()  ## scene DB
+db_len = [1,1,1,1,1]
+embedding_function = SentenceTransformerEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
+
+def get_current_db():
+    global db_0, db_1, db_2, db_3, db_4
+    global db_len
+    db_0 = Chroma(persist_directory='./db/story', embedding_function=embedding_function)
+    db_1 = Chroma(persist_directory='./db/suspect_1', embedding_function=embedding_function)
+    db_2 = Chroma(persist_directory='./db/suspect_2', embedding_function=embedding_function)
+    db_3 = Chroma(persist_directory='./db/suspect_3', embedding_function=embedding_function)
+    db_4 = Chroma(persist_directory='./db/scene', embedding_function=embedding_function)
+    db_len = [len(db_0.get()['ids']),len(db_1.get()['ids']),len(db_2.get()['ids']),len(db_3.get()['ids']),len(db_4.get()['ids'])]
+    print("Get current db")
+    print("DB len:")
+    print(db_len)
+
+def reset_db():
+    global db_0, db_1, db_2, db_3, db_4
+    global db_len
+    db_0 = Chroma()  ## story DB
+    db_1 = Chroma()  ## suspect 1 DB
+    db_2 = Chroma()  ## suspect 2 DB
+    db_3 = Chroma()  ## suspect 3 DB
+    db_4 = Chroma()  ## scene DB
+    db_len = [1,1,1,1,1]
+    ### delete all file in db
+    dirPath = "./db"
+    try:
+        shutil.rmtree(dirPath)
+    except OSError as e:
+        print(f"Error:{ e.strerror}")
+    print("Reset db")
+    print("DB len:")
+    print(db_len)
 
 #### openai processor
-def GPT_processor(length, message, function_description):
+def GPT_processor(length,system_message, user_message, function_description, temperature):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         max_tokens=length,
-        temperature=0.5,
-        messages=[{"role": "user", "content": message}],
+        temperature=temperature,
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
+            ],
         functions=function_description,
         function_call = {"name":function_description[0]['name']}
     )
@@ -28,23 +75,61 @@ def story_creater():
     start_prompt = f.read()
     with open('./story_background/story_background_description.json',encoding="utf-8") as file:
         story_background_description = [json.load(file)]
-
     print("start process AI api")
        
-    story_response = GPT_processor(2000,start_prompt, story_background_description)
+    story_response = GPT_processor(2000,start_prompt, "我想要玩一個偵探尋找殺人犯的遊戲，你可以幫我設計一個遊戲的故事內容嗎？", story_background_description, 0.5)
     # store the story dictionary result to story.json
     f2 = open("./story_background/story.txt", "w",encoding="utf-8")
     f2.write(story_response.choices[0].message.function_call.arguments)
-
+    f2.close()
     story_object  = json.dumps(story_response.choices[0].message.function_call.arguments)
     # print(story_object.encode('ascii').decode('unicode-escape'))
     with open("./story_background/story.json", "w") as outfile:
         outfile.write(story_object)
+    
+    #### add story to DB
+    print("Add story to DB")
+    global db_0, db_len
+    db_0, db_len[0] = add_database("./story_background/story.txt", './db/story', 1)
+    print("DB status")
+    print(db_len)
+    
     return story_response.choices[0].message.function_call.arguments
 
+def rich_character_info():
+    f = open("./story_background/story.json")
+    story_json = json.load(f)
+    suspects_list = json.loads(story_json).get("嫌疑人")
+    #### load start prompt
+    with open('./suspect_file/rich_suspect_prompt.txt', encoding="utf-8") as f:
+        rich_prompt = f.read()
+    with open('./story_background/story.txt', encoding="utf-8") as f:
+        story = f.read()
+
+    for i in range(3):
+        name = suspects_list[i]["姓名"]
+        rich_character_response = rich_character(rich_prompt, story, name, 1300, 0.5)
+        with open(f'./suspect_file/suspect_{i}/rich_suspect_info.txt', 'w', encoding="utf-8") as f:
+            f.write(rich_character_response)
+        if(i == 0):
+            global db_1
+            db_1, db_len[1] = add_database(f'./suspect_file/suspect_{i}/rich_suspect_info.txt', './db/suspect_1', 1)
+        elif(i == 1):
+            global db_2
+            db_2, db_len[2] = add_database(f'./suspect_file/suspect_{i}/rich_suspect_info.txt', './db/suspect_2', 1)
+        else:
+            global db_3
+            db_3, db_len[3] = add_database(f'./suspect_file/suspect_{i}/rich_suspect_info.txt', './db/suspect_3', 1)
+    return db_len
+    
 
 ###### suspect creater
 def suspect_creater(id,target,action):
+    global db_1, db_2, db_3
+    global db_len
+    #### Check rich character info
+    if os.stat("./suspect_file/suspect_0/rich_suspect_info.txt").st_size == 0:
+        db_len = rich_character_info()
     #### load suspect prompt
     f = open('./suspect_file/suspect_prompt.txt',encoding="utf-8")
     suspect_prompt = f.read()
@@ -53,22 +138,35 @@ def suspect_creater(id,target,action):
     # conversation_history = f2.read()
     keyword = action + "," + target
     
-    conversation_history=""
-    conversation_file = f"./suspect_file/suspect_{id}/conversation.txt"
-    if os.stat(conversation_file).st_size == 0:
-        conversation_history=""
-    else:
-        conversation_history = rag( keyword, conversation_file )
-
     #### load story txt
-    # f = open("./story_background/story.txt",encoding="utf-8")
-    story_txt = "./story_background/story.txt"
-    story_txt_summary = rag( keyword, story_txt )
+    with open('./story_background/story.txt',encoding="utf-8") as file:
+        story = file.read()
+    
+    suspect_db_1 = Chroma(persist_directory=f'./db/suspect_1', embedding_function=embedding_function)
+    suspect_db_2 = Chroma(persist_directory=f'./db/suspect_2', embedding_function=embedding_function)
+    suspect_db_3 = Chroma(persist_directory=f'./db/suspect_3', embedding_function=embedding_function)
+    # print("suspect db len")
+    # print(db_len)
+    if(id == 0):
+        suspect_summary = search_docs(keyword, suspect_db_1, 5)
+    elif(id == 1):
+        suspect_summary = search_docs(keyword, suspect_db_2, 5)
+    else:
+        suspect_summary = search_docs(keyword, suspect_db_3, 5)
+    user_prompt = action
+    
+    # for i in range(0, 25):
+    #     # print(story_db._collection.get(ids=[str(i)]))
+    #     print(suspect_db_1._collection.get(ids=[str(i)]))
+    #     print(suspect_db_2._collection.get(ids=[str(i)]))
+    #     print(suspect_db_3._collection.get(ids=[str(i)]))
 
-    suspect_prompt = story_txt_summary + "\n" + conversation_history + "\n" + suspect_prompt + " 你現在是嫌疑人:" + target +"，請回答以下問題：" + action
+    # print("=======================")
+
+    system_prompt = suspect_prompt + "你需要假扮嫌疑人是" + target + "提供的資訊如下:" + suspect_summary + "\n" + story
     with open('./suspect_file/suspect_description.json',encoding="utf-8") as file:
         suspect_description = [json.load(file)]
-    suspect_response = GPT_processor(200,suspect_prompt, suspect_description)
+    suspect_response = GPT_processor(200,system_message=system_prompt, user_message=user_prompt, function_description=suspect_description, temperature=0.5)
     # suspect_object  = json.dumps(suspect_response.choices[0].message.function_call.arguments)
     
     #### store to list
@@ -90,6 +188,34 @@ def suspect_creater(id,target,action):
     f.write(f"玩家:{action}\n")
     f.write( f"{target}:{ json.loads(suspect_response.choices[0].message.function_call.arguments).get('回覆') }\n" )
     f.close()
+    ### save to DB
+    with open(f"./suspect_file/suspect_{id}/tmp_conversation.txt", "w" ,encoding="utf-8") as file:
+        file.write(f"玩家:{action}\n")
+        file.write( f"{target}:{ json.loads(suspect_response.choices[0].message.function_call.arguments).get('回覆') }\n" )
+    if(id == 0):
+        db_1, d1_len = add_database(f"./suspect_file/suspect_{id}/tmp_conversation.txt", './db/suspect_1', db_len[1])
+        db_len[1] += d1_len
+    elif(id == 1):
+        db_2, d2_len = add_database(f"./suspect_file/suspect_{id}/tmp_conversation.txt", './db/suspect_2', db_len[2])
+        db_len[2] += d2_len
+    else:
+        db_3, d3_len = add_database(f"./suspect_file/suspect_{id}/tmp_conversation.txt", './db/suspect_3', db_len[3])
+        db_len[3] += d3_len
+    
+    #### check DB status
+    # story_db = Chroma(persist_directory='./db/story', embedding_function=embedding_function)
+    # suspect_db_1 = Chroma(persist_directory=f'./db/suspect_1', embedding_function=embedding_function)
+    # suspect_db_2 = Chroma(persist_directory=f'./db/suspect_2', embedding_function=embedding_function)
+    # suspect_db_3 = Chroma(persist_directory=f'./db/suspect_3', embedding_function=embedding_function)
+    
+    # for i in range(0, 25):
+    #     print(story_db._collection.get(ids=[str(i)]))
+    #     print(suspect_db_1._collection.get(ids=[str(i)]))
+    #     print(suspect_db_2._collection.get(ids=[str(i)]))
+    #     print(suspect_db_3._collection.get(ids=[str(i)]))
+
+    open(f"./suspect_file/suspect_{id}/tmp_conversation.txt", 'w').close()
+    
     # summary_processor()
     print(json.loads(suspect_response.choices[0].message.function_call.arguments).get("回覆"))
     # print(suspect_object.encode('ascii').decode('unicode-escape'))
@@ -99,33 +225,42 @@ def suspect_creater(id,target,action):
     # with open("./story_background/suspect.json", "w") as outfile:
     #     outfile.write(story_object)
     
+
+def rich_scene_info():
+    with open('./scene_file/rich_scene_prompt.txt', encoding="utf-8") as f:
+        rich_prompt = f.read()
+    with open('./story_background/story.txt', encoding="utf-8") as f:
+        story = f.read()
+    rich_scene = rich_place(rich_prompt, story, 1300, 0.8)
+
+    with open('./scene_file/rich_scene_info.txt', 'w', encoding="utf-8") as f:
+        f.write(rich_scene)
+    global db_4, db_len
+    db_4, db_len[4] = add_database(f"./scene_file/rich_scene_info.txt", './db/scene', 1)
     
 ###### scene_creater
 def scene_creater(action):
+    global db_4, db_len
+    #### Check rich scene info
+    if os.stat("./scene_file/rich_scene_info.txt").st_size == 0:
+        rich_scene_info()
     #### load start prompt
     f = open('./scene_file/scene_prompt.txt',encoding="utf-8")
     scene_prompt = f.read()
-    
-    #### load scene_conversation 
-    # f2 = open("./conversation_file/conversation.txt",encoding="utf-8")
-    # conversation_history = f2.read()
-    keyword = action + ",場景"
-    conversation_history=""
-    conversation_file = f"./scene_file/conversation.txt"
-    if os.stat(conversation_file).st_size == 0:
-        conversation_history=""
-    else:
-        conversation_history = rag( keyword, conversation_file )
 
-
+    keyword = "請根據案發現場的狀況，回答：" + action
     #### load story txt
-    story_txt = "./story_background/story.txt"
-    story_txt_summary = rag( keyword, story_txt )
-
-    scene_prompt = story_txt_summary + "\n" + conversation_history + "\n" + scene_prompt + "，回答以下問題:" + action
+    with open('./story_background/story.txt',encoding="utf-8") as file:
+        story = file.read()
+    
+    scene_db = Chroma(persist_directory='./db/scene', embedding_function=embedding_function)
+    scene_info = search_docs(keyword, scene_db, 8)
+    
+    system_prompt = scene_prompt + story  + "\n" + scene_info
+    user_prompt = action
     with open('./scene_file/scene_description.json',encoding="utf-8") as file:
         scene_description = [json.load(file)]
-    scene_response = GPT_processor(400,scene_prompt, scene_description)
+    scene_response = GPT_processor(400,system_message=system_prompt, user_message=user_prompt, function_description=scene_description, temperature=0.9)
     
     #### store to list
     conversation_information = {
@@ -149,6 +284,18 @@ def scene_creater(action):
     f.write( f"場景:{ json.loads(scene_response.choices[0].message.function_call.arguments).get('回覆') }\n" )
     print(json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆"))
     f.close()
+
+    #### save to DB
+    with open(f"./scene_file/tmp_conversation.txt", "w" ,encoding="utf-8") as file:
+        file.write(f"玩家:{action}\n")
+        file.write( f"場景:{ json.loads(scene_response.choices[0].message.function_call.arguments).get('回覆') }\n" )
+    print("before add scene to DB")
+    print(db_len)
+    db_4, d4_len = add_database(f"./scene_file/tmp_conversation.txt", './db/scene', db_len[4])
+    db_len[4] += d4_len
+    print("after add scene to DB")
+    print(db_len)
+    open(f"./scene_file/tmp_conversation.txt", 'w').close()
     # summary_processor()
     # print(scene_object.encode('ascii').decode('unicode-escape'))
     return json.loads(scene_response.choices[0].message.function_call.arguments).get("回覆")
@@ -163,13 +310,16 @@ def final_answer_creater(id, motivation, action):
     fa_prompt = f.read()
 
     #### load story txt
-    story_txt = "./story_background/story.txt"
-    story_txt_summary = rag("結果",story_txt)
-
-    fa_prompt = story_txt_summary + "\n" + fa_prompt
+    with open('./story_background/story.txt',encoding="utf-8") as file:
+        story = file.read()
+    f = open("./story_background/story.json")
+    story_json = json.load(f)
+    suspects_list = json.loads(story_json).get("嫌疑人")
+    system_prompt = fa_prompt + '\n' + story
+    user_prompt = "我猜測兇手是" +  suspects_list[id]["姓名"] + "，他的動機為" + motivation + "，他的犯案手法為" + action
     with open('./final_answer_file/final_answer_description.json',encoding="utf-8") as file:
         final_answer_description = [json.load(file)]
-    final_answer_response = GPT_processor(800,fa_prompt, final_answer_description)
+    final_answer_response = GPT_processor(800,system_message=system_prompt,user_message=user_prompt, function_description=final_answer_description, temperature=0.8)
     # store the story dictionary result to story.json
     # final_answer_object  = json.dumps(final_answer_response.choices[0].message.function_call.arguments)
     # f = open("./conversation_file/conversation.txt", "a",encoding="utf-8")
@@ -188,14 +338,13 @@ def hint_creater():
 
 
     #### load story txt
-    story_txt = "./story_background/story.txt"
-    story_txt_summary = rag("故事線索",story_txt)
-
-
-    hint_prompt = story_txt_summary + "\n" + hint_prompt 
+    with open('./story_background/story.txt',encoding="utf-8") as file:
+        story = file.read()
+    system_prompt =   hint_prompt + '\n' + story
+    user_prompt = "請給我一個提示。"
     with open('./story_background/hint_description.json',encoding="utf-8") as file:
         hint_description = [json.load(file)]
-    hint_response = GPT_processor(200,hint_prompt, hint_description)
+    hint_response = GPT_processor(200,system_prompt, user_prompt, hint_description, 0.6)
     
     f = open(f"./story_background/hints_history.txt", "a",encoding="utf-8")
     f.write(json.loads(hint_response.choices[0].message.function_call.arguments).get("回覆"))

@@ -20,11 +20,11 @@ def GPT_response(system_message, user_message, max_tokens=1300, temperature=0.8)
     )
     return response
 
-def rich_character(prompt, story, max_tokens=1300, temperature=0.8):
+def rich_character(prompt, story, name, max_tokens=1300, temperature=0.8):
     system_prompt = prompt + story
-
-    response = GPT_response(system_prompt, "請豐富三個嫌疑人的個人資訊。", max_tokens=max_tokens, temperature=temperature)
-    print(response.choices[0]['message']['content'])
+    user_prompt = "請豐富" + name + "的個人資訊。"
+    response = GPT_response(system_prompt, user_prompt, max_tokens=max_tokens, temperature=temperature)
+    # print(response.choices[0]['message']['content'])
     return response.choices[0]['message']['content']
 
 def character(name, prompt, story, character_info, query, max_tokens=1300, temperature=0.8):
@@ -33,7 +33,7 @@ def character(name, prompt, story, character_info, query, max_tokens=1300, tempe
     prompt = prompt + character_name + story + character_info
 
     response = GPT_response(prompt, query, max_tokens=max_tokens, temperature=temperature)
-    print(response.choices[0]['message']['content'])
+    # print(response.choices[0]['message']['content'])
     return response.choices[0]['message']['content']
 
     
@@ -41,13 +41,13 @@ def rich_place(prompt, story, max_tokens=1300, temperature=0.8):
     system_prompt = prompt 
     user_prompt = "我將給你一段偵探故事，請你幫我豐富案發現場的資訊。" + story
     response = GPT_response(system_prompt, user_prompt, max_tokens=max_tokens, temperature=temperature)
-    print(response.choices[0]['message']['content'])
+    # print(response.choices[0]['message']['content'])
     return response.choices[0]['message']['content']
 
 def summary(prompt, story, max_tokens=1300, temperature=0.8):
     system_prompt = prompt 
     user_prompt = "我將給你一段偵探故事，請你幫我進行總結。" + story
     response = GPT_response(system_prompt, user_prompt, max_tokens=max_tokens, temperature=temperature)
-    print(response.choices[0]['message']['content'])
+    # print(response.choices[0]['message']['content'])
     return response.choices[0]['message']['content']
 

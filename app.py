@@ -1,7 +1,7 @@
 from flask import Flask,jsonify,request
 import json
 import os
-from AI_processor import story_creater, suspect_creater, scene_creater, final_answer_creater, hint_creater
+from AI_processor import story_creater, suspect_creater, scene_creater, final_answer_creater, hint_creater, reset_db, get_current_db
 import AI_processor
 print(AI_processor.m_list)
 app = Flask(__name__)
@@ -15,6 +15,7 @@ def checker():
         print("story has already fetched")
         f = open("./story_background/story.json")
         story_json = json.load(f)
+        get_current_db()
         return story_json
 
 
@@ -26,6 +27,8 @@ def cleaner():
     open("./suspect_file/suspect_1/conversation.txt", 'w').close()
     open("./suspect_file/suspect_2/conversation.txt", 'w').close()
     open("./scene_file/conversation.txt", 'w').close()
+    open("./suspect_file/rich_suspect_info.txt", 'w').close()
+    reset_db()
 
 
 @app.route('/api/stories',methods=['GET']) # spend 2~3 min
