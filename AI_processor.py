@@ -76,6 +76,7 @@ def reset_db():
     print("DB len:")
     print(db_len)
 
+demo_story_count=1
 #### openai processor
 def GPT_processor(length,system_message, user_message, function_description, temperature):
     response = openai.ChatCompletion.create(

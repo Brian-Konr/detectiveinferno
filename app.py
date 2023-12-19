@@ -5,20 +5,32 @@ from AI_processor import story_creater, suspect_creater, scene_creater, final_an
 import AI_processor
 from flask_cors import CORS, cross_origin
 print(AI_processor.m_list)
+print(AI_processor.demo_story_count)
 app = Flask(__name__)
 CORS(app)
 story_json = {}
 def checker():
-    if os.stat("./story_background/story.json").st_size == 0:
-        story_json = story_creater()
-        print("no story !!")
-        return story_json
-    else:
-        print("story has already fetched")
-        f = open("./story_background/story.json")
-        story_json = json.load(f)
-        get_current_db()
-        return story_json
+    # if os.stat("./story_background/story.json").st_size == 0:
+    #     story_json = story_creater()
+    #     print("no story !!")
+    #     return story_json
+    # else: ### use this part when demo
+    print("story has already fetched")
+    ########demo 
+    f = open(f"./stories/story_{ AI_processor.demo_story_count }.json")
+    AI_processor.demo_story_count+=1
+    if AI_processor.demo_story_count > 2:
+        AI_processor.demo_story_count = 1
+    story_json = json.load(f)
+    f2 = open("./story_background/story.txt", "w",encoding="utf-8")
+    f2.write(story_json)
+    story_object  = json.dumps(story_json)
+    with open("./story_background/story.json", "w") as outfile:
+        outfile.write(story_object)
+    ########demo
+    # f = open("./story_background/story.json")
+    # story_json = json.load(f)
+    return story_json
 
 
 def cleaner():
@@ -40,13 +52,18 @@ def cleaner():
 
 @app.route('/api/stories',methods=['GET']) # spend 2~3 min
 def GET_story():
-    story_json = checker()
-    story_overview = json.loads(story_json).get("故事大綱")
-    story_title = json.loads(story_json).get("標題")
-    print(story_overview)
-    print(story_title)
-    # print(story_overview.encode('ascii').decode('unicode-escape'))
-    return jsonify({"data":story_overview,"title":story_title})
+    try:
+        story_json = checker()
+        story_overview = json.loads(story_json).get("故事大綱")
+        story_title = json.loads(story_json).get("標題")
+        print(story_overview)
+        print(story_title)
+        # print(story_overview.encode('ascii').decode('unicode-escape'))
+        return jsonify({"data":story_overview,"title":story_title})
+    except Exception as e:
+        open("./story_background/story.json", 'w').close()
+        open("./story_background/story.txt", 'w').close()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/avatars',methods=['GET'])
