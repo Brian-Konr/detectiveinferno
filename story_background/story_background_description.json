@@ -139,6 +139,10 @@
                     "required":["ID","概述","相關人物","細節"]
                 }
             },
+            "推理":{
+                "type":"string",
+                "description":"The process of how to find out the crime from the clues."
+            },
             "結果":{
                 "type":"object",
                 "properties":{
@@ -162,6 +166,6 @@
                 "required":["犯人","動機","作案過程","證據"]
             }
         },
-        "required":["標題","故事大綱","時間","地點","死者","死因","嫌疑人","嫌疑人資訊","場景","線索","結果"]
+        "required":["標題","故事大綱","時間","地點","死者","死因","嫌疑人","嫌疑人資訊","場景","線索","推理","結果"]
     }
 }
