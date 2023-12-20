@@ -6,30 +6,35 @@ import AI_processor
 from flask_cors import CORS, cross_origin
 print(AI_processor.m_list)
 print(AI_processor.demo_story_count)
+print(AI_processor.demo_mode)
 app = Flask(__name__)
 CORS(app)
 story_json = {}
 def checker():
-    # if os.stat("./story_background/story.json").st_size == 0:
-    #     story_json = story_creater()
-    #     print("no story !!")
-    #     return story_json
-    # else: ### use this part when demo
-    print("story has already fetched")
-    ########demo 
-    f = open(f"./stories/story_{ AI_processor.demo_story_count }.json")
-    AI_processor.demo_story_count+=1
-    if AI_processor.demo_story_count > 2:
-        AI_processor.demo_story_count = 1
-    story_json = json.load(f)
-    f2 = open("./story_background/story.txt", "w",encoding="utf-8")
-    f2.write(story_json)
-    story_object  = json.dumps(story_json)
-    with open("./story_background/story.json", "w") as outfile:
-        outfile.write(story_object)
+    if os.stat("./story_background/story.json").st_size == 0:
+        if AI_processor.demo_mode == True:
+            print("story has already fetched")
+            print(f"./stories/story_{ AI_processor.demo_story_count }.json")
+            ########demo 
+            f = open(f"./stories/story_{ AI_processor.demo_story_count }.json")
+            AI_processor.demo_story_count+=1
+            if AI_processor.demo_story_count > 5:
+                AI_processor.demo_story_count = 1
+            story_json = json.load(f)
+            f2 = open("./story_background/story.txt", "w",encoding="utf-8")
+            f2.write(story_json)
+            story_object  = json.dumps(story_json)
+            with open("./story_background/story.json", "w") as outfile:
+                outfile.write(story_object)
+        else:
+            print("no story !!")
+            story_json = story_creater()
+        return story_json
+    else: 
+        f = open("./story_background/story.json")
+        story_json = json.load(f)
+    
     ########demo
-    # f = open("./story_background/story.json")
-    # story_json = json.load(f)
     return story_json
 
 
@@ -54,8 +59,9 @@ def cleaner():
 def GET_story():
     try:
         story_json = checker()
-        story_overview = json.loads(story_json).get("故事大綱")
-        story_title = json.loads(story_json).get("標題")
+        print("finish checker")
+        story_overview = json.loads(story_json,strict=False).get("故事大綱")
+        story_title = json.loads(story_json,strict=False).get("標題")
         print(story_overview)
         print(story_title)
         # print(story_overview.encode('ascii').decode('unicode-escape'))
@@ -151,4 +157,4 @@ def GET_hints():
     hint_reply = hint_creater()
     return jsonify({"data":hint_reply})
 
-app.run(debug=True,port=4000)
+app.run(debug=True,port=3000)

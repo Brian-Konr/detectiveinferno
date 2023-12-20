@@ -10,6 +10,8 @@ from langchain.vectorstores import Chroma
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 #### global variable 
 m_list = [[],[],[],[]] 
+demo_story_count=1
+demo_mode = True
 #### global DB
 db_0 = Chroma()  ## story DB
 db_1 = Chroma()  ## suspect 1 DB
@@ -76,7 +78,7 @@ def reset_db():
     print("DB len:")
     print(db_len)
 
-demo_story_count=1
+
 #### openai processor
 def GPT_processor(length,system_message, user_message, function_description, temperature):
     response = openai.ChatCompletion.create(
