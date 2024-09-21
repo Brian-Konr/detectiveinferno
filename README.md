@@ -23,16 +23,12 @@ Watch our demo video to see DetectiveInferno in action:
 - AI Integration: OpenAI GPT-3.5
 - RAG Architecture: Langchain, ChromaDB
 
-## Installation
-
-1. Clone the repository:
-Welcome to DetectiveInferno, an immersive detective game generator and interactive storytelling platform! Dive into the world of mystery and intrigue as you investigate a crime, interrogate suspects, and unravel the secrets hidden within the narrative.
-
 ## Frontend Service
 
 This project was bootstrapped with Vite.
 
 ### Prerequisites
+
 
 Before you begin, ensure you have met the following requirements:
 
@@ -53,3 +49,9 @@ To start the Frontend Service in development mode, follow these steps:
 - Navigate to the frontend directory in your terminal.
 - Run `npm run dev`.
 - The application will start and should be available at http://localhost:5173 (or another port if 5173 is not available).
+
+
+## Paper
+
+For more details on the research behind DetectiveInferno, check out our paper:
+[DetectiveInferno: When RAG Meets Generative AI Detective Story Game](https://drive.google.com/file/d/11IUMkFY0LWXbl3Uzl7z48vFlwZBXpnoJ/view?usp=sharing)
